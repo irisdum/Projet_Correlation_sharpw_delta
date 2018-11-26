@@ -12,7 +12,7 @@ import scipy.signal as sp
 import scipy
 from scipy import interpolate
 from scipy.interpolate import UnivariateSpline
-time=50
+time=60
 global t0
 t0=30
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à changer selon les ordinateurs 
@@ -163,7 +163,7 @@ def filtre(char,T,opt='ripples'):
     
 
 def calc_puiss(char,T,h=20,opt='ripples'):
-    """trace puissance du signal sur une portion delta et par saut de h. on compte en nombre de point"""
+    """retourne un vecteur puissance du signal sur une portion delta et par saut de h. on compte en nombre de point"""
     Y=filtre(char,T,opt)
     #T=open_data('BP1-BP2_Temps.txt')[0:20*512]
     
@@ -276,9 +276,9 @@ def detec_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=20):
     Tp=calc_puiss(char1,T,h,opt)[1]
     ecart=np.std(Y)
     moy=np.mean(Y)
-    print(moy)
+    #print(moy)
     seuil=moy+fact*ecart
-    print(seuil)
+    #print(seuil)
     list_max=[]
     list_time_max=[]#la liste retournée contient les indices des max d'amplitude des sharpw
     list_ripples=[[0,0]] #Initialisation
@@ -379,12 +379,12 @@ def vect_detect_pic(char1,T,opt='ripples',fact=3,max_fact=10):
             vect+=[0] #on a detecté tous les sharpw ripples
     #print(vect)
     #print('taille vect', len(vect[:-1])) #j'ai un pb de dimension de vecteurs : bizarre
-    plt.title("Detection sharpw signal "+char1[66:-4])
+    #plt.title("Detection sharpw signal "+char1[66:-4])
     plt.grid()
     #plt.figure(figsize=(15,30))
-    plt.subplot(2,1,2)
+   # plt.subplot(2,1,2)
     #print("T et vect" ,len(T),len(vect))
-    plt.plot(T,vect)
+    plt.plot(T,vect,label="Detection sharpw signal "+char1[66:-4])
     #plt.show()    
     return vect
     
@@ -454,6 +454,16 @@ def phase_delta(char_B,char_O,T,h):
         ax2.axvline(x=elem,color='r')
     return phase_instantaneous
     
+def statistic_sharpw(char1,T,fact=3,max_fact=10,h=20):
+    """Fonction qui retourne le nombre de sharpw detectés, leur amplitude max, la moyenne et l'ecart-type"""
+    U0=detec_pic(char1,T,'ripples',fact,max_fact,h)[1]#liste contenant les maximum d'amplitude
+    print('Moyenne des pic d amplitude comprise est ',np.mean(U0))
+    print('Deviation moyenne' ,(np.std(U0)))
+    print('Valeur maximal', (np.max(U0)))
+    print('Valeur minimal',(np.min(U0)))
+    print('nombre de sharpw détécté', len(U0))
     
-    
+def is_epil_pic(t):
+    """Fonction qui retourne vrai si le pic à t correspond à un pic epileptic false sinon"""
+    return 0;
     
