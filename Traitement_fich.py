@@ -12,7 +12,7 @@ import scipy.signal as sp
 import scipy
 from scipy import interpolate
 from scipy.interpolate import UnivariateSpline
-time=20
+time=50
 global t0
 t0=30
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à changer selon les ordinateurs 
@@ -22,6 +22,8 @@ val_fig=4
 #fig1=plt.figure(0)
 # Traitement des fichier exporté en format .txt sur Matlab
 
+
+        
 def open_data(char):
     """char : the path to file
         returns the list of the element of the signal"""
@@ -364,7 +366,6 @@ def vect_detect_pic(char1,T,opt='ripples',fact=3,max_fact=10):
     i=0
     for elem in T:
         if i<len(U0):# qd on a détecté tous les sharpw ripples
-            
             if  elem>=U0[i][0]:
                 if elem<round(U0[i][1],6):
                     vect+=[1]
@@ -381,15 +382,16 @@ def vect_detect_pic(char1,T,opt='ripples',fact=3,max_fact=10):
     plt.title("Detection sharpw signal "+char1[66:-4])
     plt.grid()
     #plt.figure(figsize=(15,30))
-    #plt.subplot(2,1,2)
-    #plt.plot(T,vect)
+    plt.subplot(2,1,2)
+    #print("T et vect" ,len(T),len(vect))
+    plt.plot(T,vect)
     #plt.show()    
     return vect
     
 def detect_delta(char_delta,T,h):
     """Detecte les pics supposés caractéristique des rythmes delta du cerveau selon un critère d'amplitude"""
     plt.figure(figsize=(30,15))
-    #plt.subplot(2,1,1)
+    plt.subplot(2,1,1)
     aff_puiss(char_delta,T,h,'delta')
     Ud2=detec_pic(char_delta,T,'delta',2,100,h);#On considère uniquement les pics élevés
     plt.plot(Ud2[0],Ud2[1],'r*',label='above 2 std')
