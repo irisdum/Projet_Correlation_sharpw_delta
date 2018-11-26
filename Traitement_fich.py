@@ -266,7 +266,7 @@ def periode_corr(char1,char2,seuil=0.11,opt=1,part=1):
                 plt.plot(0+i+part*512*time,Y[i],'g*')
     return [elem/512 for elem in per][0:-1] #le dernier element ne correspond pas à une différence de temps : on l'enlève
 
-def detec_sharp_ripples(char1,T,opt='ripples',fact=3,max_fact=10,h=20):
+def detec_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=20):
     """retourne la liste des abscisses du maximum d'amplitude des sharpw ripples"""
     #Y1=open_data(char1)[0:time*512]
     global val_fig
@@ -344,21 +344,21 @@ def sort_sharpw_ripples(char1,T,opt='ripples',h=20):
 
     aff_puiss(char1,T)
     
-    U0=detec_sharp_ripples(char1,T,'ripples',3,5,h)
+    U0=detec_pic(char1,T,'ripples',3,5,h)
     plt.plot(U0[0],U0[1],'g*',label="between 3-5 std")
     
-    U1=detec_sharp_ripples(char1,T,'ripples',5,7,h)
+    U1=detec_pic(char1,T,'ripples',5,7,h)
     plt.plot(U1[0],U1[1],'b*',label="between 5-7 std")
     
-    U2=detec_sharp_ripples(char1,T,'ripples',7,50,h)
+    U2=detec_pic(char1,T,'ripples',7,50,h)
     plt.plot(U2[0],U2[1],'r*',label="above 7 std")
     
     plt.legend()
     
     
 def vect_detect_pic(char1,T,opt='ripples',fact=3,max_fact=10):
-    """retourne un vecteur de 0 et et de 1 correspondant à la detection de sharpw. Soit 1 quand la valeur du signal correspond à un pic sharpw 0 sinon"""
-    U0=detec_sharp_ripples(char1,T,opt,fact,max_fact,1)[2]
+    """retourne un vecteur de 0 et et de 1 correspondant à la detection de pic. Soit 1 quand la valeur du signal correspond à un pic sharpw 0 sinon"""
+    U0=detec_pic(char1,T,opt,fact,max_fact,1)[2]
     print(len(T))
     vect=[]#liste qui ca contenir les 0 et les 1
     i=0
@@ -371,31 +371,33 @@ def vect_detect_pic(char1,T,opt='ripples',fact=3,max_fact=10):
                 if elem==round(U0[i][1],6):
                     vect+=[1]
                     i+=1
+                    
             else:
                 vect+=[0]
         else:
             vect+=[0] #on a detecté tous les sharpw ripples
-        if len(vect)!=T.index(elem)+1:
-            print("indice pb ",T.index(elem))
-    print('taille vect', len(vect[:-1])) #j'ai un pb de dimension de vecteurs : bizarre
+    #print(vect)
+    #print('taille vect', len(vect[:-1])) #j'ai un pb de dimension de vecteurs : bizarre
     plt.title("Detection sharpw signal "+char1[66:-4])
     plt.grid()
     #plt.figure(figsize=(15,30))
     #plt.subplot(2,1,2)
-    plt.plot(T,vect)
+    #plt.plot(T,vect)
     #plt.show()    
+    return vect
     
 def detect_delta(char_delta,T,h):
     """Detecte les pics supposés caractéristique des rythmes delta du cerveau selon un critère d'amplitude"""
     plt.figure(figsize=(30,15))
     #plt.subplot(2,1,1)
     aff_puiss(char_delta,T,h,'delta')
-    Ud2=detec_sharp_ripples(char_delta,T,'delta',2,100,h);
+    Ud2=detec_pic(char_delta,T,'delta',2,100,h);#On considère uniquement les pics élevés
     plt.plot(Ud2[0],Ud2[1],'r*',label='above 2 std')
-    Ud1=detec_sharp_ripples(char_delta,T,'delta',0.3,2,h);#déterminé arbitrairement, pour avoir des pics intéressant
-    plt.plot(Ud1[0],Ud1[1],'b*',label='between 0.3 and two std')
+    #Ud1=detec_pic(char_delta,T,'delta',0.3,2,h);#déterminé arbitrairement, pour avoir des pics intéressant
+    #plt.plot(Ud1[0],Ud1[1],'b*',label='between 0.3 and two std')
     plt.title("Detection de pic delta "+char_delta[66:-4])
     plt.legend()
+
    
     
 def detec_delta_sharp_ripples(char_delta,char_ripples,T):
@@ -404,7 +406,7 @@ def detec_delta_sharp_ripples(char_delta,char_ripples,T):
 
     
     #T=calc_puiss(char_delta,T,h=20,opt='delta')[1]
-    X=detec_sharp_ripples(char_ripples,T)[0]
+    X=detec_pic(char_ripples,T)[0]
     aff_puiss(char_delta,T,h=20,opt='delta')
     #print(X)
     for elem in X:
@@ -421,35 +423,35 @@ def detec_epileptic_pic(char_A,char_B,T):
     plt.subplot(3,1,1) #penser à commenter des bouts de certaines partie de code afin que tout s'affiche bien 
     trace(char_A,T)          
     plt.subplot(3,1,2)
-    detec_sharp_ripples(char_A,T,opt='A')
+    detec_pic(char_A,T,opt='A')
     plt.subplot(3,1,3)
-    detec_sharp_ripples(char_B,T)
+    detec_pic(char_B,T)
     plt.xlabel('temps en seconde')
 
     
-def phase_delta(char_B,char_O,T):
+def phase_delta(char_B,char_O,T,h):
     """Determinons la phase du signal delta lorsque le critère sharpw est détecté aux instants appartenant à la liste_t"""
     #On utilise la transformée de Hilbert 
-    Tpuiss,Y=calc_puiss(char_O,T,20,'delta')[1],calc_puiss(char_O,T,20,'delta')[0]
-    list_t=detec_sharp_ripples(char_B,T) #liste des point où on detecte un sharpw
+    Tpuiss,Y=calc_puiss(char_O,T,h,'delta')[1],calc_puiss(char_O,T,h,'delta')[0]
+    list_t=detec_pic(char_B,T)[0] #liste des point où on detecte un sharpw
     #Y=np.cos(T)
     signal_analytic=sp.hilbert(Y)
     phase_instantaneous=np.angle(signal_analytic)#on a bien une periodicité de la phase compris entre [-pi,pi]]
-    fig=plt.figure()
+    fig=plt.figure(figsize=(30,15))
     ax0=fig.add_subplot(211)
     ax0.plot(Tpuiss,Y,label='signal')
     ax0.legend()
     plt.title(char_O[66:-4])
     #ax3=fig.add_subplot(312)
-    #list_t=detec_sharp_ripples(char_B,T) 
+    #list_t=detec_pic(char_B,T) 
     ax2=fig.add_subplot(212)
+    plt.title("phase de la puissance du signal "+char_O[66:-4])
     ax2.plot(Tpuiss,phase_instantaneous)
     ax2.set_xlabel("time in seconds")
     for elem in list_t:
         ax2.axvline(x=elem,color='r')
-    return 0
+    return phase_instantaneous
     
-    #return phase_instantaneous[ti*512] #ti etant en seconde on le convertir pour raisonner en nombre de points
     
     
     

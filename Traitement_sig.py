@@ -47,9 +47,9 @@ T=open_data(chemin+'BP1-BP2_Temps.txt')[0:time*512]
 #print(np.mean(periode_corr(chemin+"B'2-B'1N3.txt",chemin+"O'9-O'8N3.txt",0.10,1,0)))
 
 ##Etudions si les sharpw sont détécté à peu près au même moment pour deux electrodes proches dans l'hippocampe
-#detec_sharp_ripples(chemin+"B'4-B'3N3.txt",T,3,5,1)
-#detec_sharp_ripples(chemin+"B'2-B'1N3.txt",T)
-#detec_sharp_ripples(chemin+"B'3-B'2N3.txt",T)
+#detec_pic(chemin+"B'4-B'3N3.txt",T,3,5,1)
+#ddetec_pic(chemin+"B'2-B'1N3.txt",T)
+#ddetec_pic(chemin+"B'3-B'2N3.txt",T)
 #Etudions les differents type de sharpw soit trié en fonction de leur écart à la moyenne
 #sort_sharpw_ripples(chemin+"B3-B2N3.txt",'ripples',1)
 
@@ -62,7 +62,7 @@ T=open_data(chemin+'BP1-BP2_Temps.txt')[0:time*512]
 #detec_epileptic_pic(chemin+ "A'2-A'1N3.txt",chemin+"B'4-B'3N3.txt",T)
 
 #récupérons la phase du signal lorsqu'un sharpw est détecté
-#phase_delta(chemin+"B'2-B'1N3.txt",chemin+"O'9-O'8N3.txt",T)
+#phase_delta(chemin+"B'2-B'1N3.txt",chemin+"O'9-O'8N3.txt",T,20)
 
 #Afin de pouvoir étudier les motifs sur un nouvel alogrithme, on veut avoir 
 
@@ -72,7 +72,7 @@ T=open_data(chemin+'BP1-BP2_Temps.txt')[0:time*512]
 #YO=open_data(chemin+"O'9-O'8N3.txt")[0:time*512]
 
 #On extrait la série en puissance il faut qu'elle soit de la même longueur
-#PB=calc_puiss(chemin+"B3-B2N3.txt",T,h=1,opt='ripples')[0]
+#PB=calc_puiss(chemin+"B3-B2N3.txt",T,h=1,opt='ripples')[0] #on choisit de faire un pas de 1
 #PO=calc_puiss(chemin+"O'9-O'8N3.txt",T,h=1,opt='delta')[0]
 #aff_puiss(chemin+"B3-B2N3.txt",T,h=5,opt='ripples')
 
@@ -81,7 +81,10 @@ T=open_data(chemin+'BP1-BP2_Temps.txt')[0:time*512]
 #vect_detect_pic(chemin+"B3-B2N3.txt",T)
 
 ##Detection des pics delta de la même manière que l'on a détecté les sharp waves ripples
-detect_delta(chemin+"O'9-O'8N3.txt",T,1)
+#detect_delta(chemin+"O'9-O'8N3.txt",T,1)
 
 #Construction d'un vecteur de 0 et de 1 caractérisant la présence de pic delta
-vect_detect_pic(chemin+"O'9-O'8N3.txt",T,'delta',0.3,100)
+#Y=vect_detect_pic(chemin+"O'9-O'8N3.txt",T,'delta',2,100)
+
+#vecteur pour la phase : 
+phi=phase_delta(chemin+"B3-B2N3.txt",chemin+"O'9-O'8N3.txt",T,1)
