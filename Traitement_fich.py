@@ -12,7 +12,7 @@ import scipy.signal as sp
 import scipy
 from scipy import interpolate
 from scipy.interpolate import UnivariateSpline
-time=60
+time=50
 global t0
 t0=30
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à changer selon les ordinateurs 
@@ -154,8 +154,8 @@ def filtre(char,T,opt='ripples'):
     #print(val_fig)
 #    plt.figure(figsize=(20,30))
 #    plt.subplot(2,1,1)
-#    plt.plot(T,filtered)
-#    plt.title("Signal filtré")
+    #plt.plot(T,filtered)
+    #plt.title("Signal filtré")
 #    plt.show()
 #    a commenter lorsqu'on veut afficher comparaison en puissance    
     
@@ -171,13 +171,13 @@ def calc_puiss(char,T,h=20,opt='ripples'):
     Tpuiss=[]
     #Ti=[] #contient les i pour correspondant au temps
     if opt=='ripples':
-        delta=25
+        delta=50
     if opt =='delta':
-        delta=250 #correspond à la variation de la fenetre
-    i=delta
-    while i<512*time-delta:
+        delta=500 #correspond à la variation de la fenetre
+    i=0
+    while i<=512*time-delta:#On a pas la puissance des derniers points à voir 
         #print(i+delta)
-        puiss+=[np.linalg.norm(Y[i-delta:i+delta])]#portion de environ 20ms
+        puiss+=[np.linalg.norm(Y[i:i+delta])]#portion de environ 20ms
         Tpuiss+=[i/512]
         #Ti+=[i]
         i=i+h
@@ -300,6 +300,7 @@ def detec_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=20):
         #print(list_ripples)
         if seuil<Y[i]:#il faut voir le cas où le les valeurs de départ ont déja dans sharpw dans ces cas là on a un problem d'index out of range 
             if (Y[i-1]<seuil):#vérifie que l'élément d'avant n'était pas dans un ripple
+                #if is_epil_pic(i,chemin+"A'2-A'1N3.txt",T,1):
                 list_ripples+=[[Tp[i],Tp[i]]]
                 #sharpw=1
 #                print(list_ripples)
@@ -307,6 +308,7 @@ def detec_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=20):
 #                plt.plot(Tp[i],Y[i],'g*')
                 #fin_ripples+=[Tp[i]]
             if (Y[i+1]<seuil): # le cas ou l'element d'après n'est plus au dessus du seuil et que le debut de l'extrait n'a pas commence sur un pic 
+                #if is_epil_pic(i,chemin+"A'2-A'1N3.txt",T,-1):
                 list_ripples[-1][1]=Tp[i+1]#on ajoute l'element de fin 
                 #print(list_ind[-1][1])
                 list_ind[-1][1]=i+1
@@ -317,20 +319,27 @@ def detec_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=20):
                 #Traiter le cas où le pic max est sur un sommet
                 if list_ripples[-1][1]==list_ripples[-1][0]:#le cas où le point i étudié est un maximum
                     pic_max=[Y[list_ind[-1][0]]]
-                    print(list_max)
+                    #print(list_max)
                 #@print(list_time_max)
                 if (list_ripples[-1][1]-list_ripples[-1][0]) > 0.02:  #Si le pic est assez large
                     #On calcule le maximum du pic, soit une interpolation
                     l_sharpw=Y[list_ind[-1][0]:list_ind[-1][1]]#liste des valeurs de Y etant potentiellement un sharpw
                     pic_max=max(l_sharpw) #le maximum du pic
                     if pic_max<=max_fact*ecart+moy:
-                        #print(pic_max)
+                        #print(list_ind[-1][0])
+                      
+                        if(is_epil_pic(list_ind[-1][0],chemin+"A'2-A'1N3.txt",T,1)):
+                           # print(pic_max)
                         #print
                         #print(l_sharpw.index(pic_max))
-                        list_time_max+=[Tp[l_sharpw.index(pic_max)+list_ind[-1][0]]]#l'indice du maximum de pic
-                        list_max+=[pic_max]
+                            list_time_max+=[Tp[l_sharpw.index(pic_max)+list_ind[-1][0]]]#l'indice du maximum de pic
+                            list_max+=[pic_max]
+                        else:
+                          
+                            del list_ripples[-1]    
                     else:
                         del list_ripples[-1]
+
                 else:
                     del list_ripples[-1]
                     #print(list_ripples)
@@ -463,7 +472,25 @@ def statistic_sharpw(char1,T,fact=3,max_fact=10,h=20):
     print('Valeur minimal',(np.min(U0)))
     print('nombre de sharpw détécté', len(U0))
     
-def is_epil_pic(t):
-    """Fonction qui retourne vrai si le pic à t correspond à un pic epileptic false sinon"""
-    return 0;
+def is_epil_pic(ind,char_A,T,opt=1):
+    """Fonction qui retourne vrai si le pic à l'indice ind de la liste correspond à un pic epileptic false sinon"""
+    ##Il faut étudier si il y a un pic dans le signal A
+    #On calcule la puissance du signal A
+  
+
+    #filtre(char_A,T)
+    fact=6 # determiné empiriquement là où il y a des pics significatif
+    #print('ici et ',ind)
+    puiss_A=calc_puiss(char_A,T,1,'ripples')[0] 
+  
+    ecart=np.std(puiss_A)
+    moy=np.mean(puiss_A)
+#    print(puiss_A[ind:ind+100])
+    #On calcule la valeur moyenne sur 20ms si celle ci est superieur à x fois la valeur moyenne de la puissance, on élimine la valeur de t
+    val=max(puiss_A[ind:ind+100])
+    if val>moy+fact*ecart:
+        plt.axvline(x=ind/512)
+        return 0
+    else:
+        return 1
     

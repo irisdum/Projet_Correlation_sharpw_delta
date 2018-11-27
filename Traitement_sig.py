@@ -8,7 +8,7 @@ Created on Sun Nov  4 14:28:31 2018
 
 from Traitement_fich import*
 
-time=60
+time=50
 
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à changer selon les ordinateurs
 
@@ -54,7 +54,7 @@ T=[round(i/512,6) for i in range(1,time*512+1)]
 #detec_pic(chemin+"B'3-B'2N3_120s.txt",T)
 #Etudions les differents type de sharpw soit trié en fonction de leur écart à la moyenne
 #sort_sharpw_ripples(chemin+"B3-B2N3_120s.txt",'ripples',1)
-#sort_sharpw_ripples(chemin+"B'3-B'2N3_120s.txt",'ripples',1)
+sort_sharpw_ripples(chemin+"B'3-B'2N3_120s.txt",T,'ripples',1)
 
 ##Etudions si des sharps waves rippples coincident graphiquement avec l'apparition de delta
 
@@ -68,12 +68,12 @@ T=[round(i/512,6) for i in range(1,time*512+1)]
 #phase_delta(chemin+"B'2-B'1N3.txt",chemin+"O'9-O'8N3.txt",T,20)
 
 #Comparons les vecteurs detectiion pour delta et sharpw
-charB=chemin+"B3-B2N3_60s.txt"
-charO=chemin+"O'9-O'8N3_60s.txt"
-plt.figure(figsize=(30,15))
-VB=vect_detect_pic(charB,T,'ripples',3,15)
-VO=vect_detect_pic(charO,T,'delta',2,100)
-plt.legend(loc=3)
+#charB=chemin+"B3-B2N3_60s.txt"
+#charO=chemin+"O'9-O'8N3_60s.txt"
+#plt.figure(figsize=(30,15))
+#VB=vect_detect_pic(charB,T,'ripples',3,15)
+#VO=vect_detect_pic(charO,T,'delta',2,100)
+#plt.legend(loc=3)
 
 
 #Etablissons les statistiques : On essaie de se focaliser sur des extraits de 1 à 2 minutes

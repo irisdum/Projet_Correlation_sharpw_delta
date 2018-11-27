@@ -9,7 +9,7 @@ Created on Mon Nov 26 14:21:24 2018
 
 from Traitement_fich import*
 
-time=60 #Au debut
+time=50 #Au debut
 
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à changer selon les ordinateurs
 
