@@ -50,11 +50,11 @@ char_A=chemin+"A'2-A'1N3.txt" #a changer en fonction de la taille de l'extrait c
 
 ##Etudions si les sharpw sont détécté à peu près au même moment pour deux electrodes proches dans l'hippocampe
 #detec_pic(chemin+"B'4-B'3N3.txt",char_A,T,3,5,1)
-#detec_pic(chemin+"B'2-B'1N3.txt",char_A,T)
-print(detec_pic(chemin+"B3-B2N3_120s.txt",char_A,T)[0])
+#detec_pic(chemin+"B'2-B'1N3.txt",char_A,T,'ripples',3,50,1)
+#print(detec_pic(chemin+"B3-B2N3_120s.txt",char_A,T)[0])
 #Etudions les differents type de sharpw soit trié en fonction de leur écart à la moyenne
 #sort_sharpw_ripples(chemin+"B3-B2N3_120s.txt",char_A,'ripples',1)
-#sort_sharpw_ripples(chemin+"B'3-B'2N3.txt",char_A,T,'ripples',1)
+#sort_sharpw_ripples(chemin+"B3-B2N3.txt",char_A,T,'ripples',1)
 #
 ##Etudions si des sharps waves rippples coincident graphiquement avec l'apparition de delta
 

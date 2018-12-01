@@ -295,6 +295,8 @@ def detec_pic(char1,char_A,T,opt='ripples',fact=3,max_fact=10,h=20):
     #print(seuil)
     true_peak=[]#contains the time of sharpw detection after checkig it is not epileptic peak
     list_max=[]
+    true_list_max=[]
+    true_list_ripples=[]
     list_time_max=[]#la liste retournée contient les indices des max d'amplitude des sharpw
     list_ripples=[[0,0]] #Initialisation
     list_ind=[[0,0]]#contient les indices des moment ou un pic est détectée
@@ -313,57 +315,62 @@ def detec_pic(char1,char_A,T,opt='ripples',fact=3,max_fact=10,h=20):
     #aff_puiss(char1,T)
     for i in range(1,len(Tp)-1):
         #print(list_ripples)
-        if seuil<Y[i]:#il faut voir le cas où les valeurs de départ ont déja dans sharpw dans ces cas là on a un problem d'index out of range 
+        if seuil<Y[i]: 
             if (Y[i-1]<seuil):#vérifie que l'élément d'avant n'était pas dans un ripple
-                #if is_epil_pic(i,chemin+"A'2-A'1N3.txt",T,1):
+             
                 list_ripples+=[[Tp[i],Tp[i]]]
-                #sharpw=1
-#                print(list_ripples)
                 list_ind+=[[i,i]]
-#                plt.plot(Tp[i],Y[i],'g*')
-                #fin_ripples+=[Tp[i]]
             if (Y[i+1]<seuil): # le cas ou l'element d'après n'est plus au dessus du seuil et que le debut de l'extrait n'a pas commence sur un pic 
                 #if is_epil_pic(i,chemin+"A'2-A'1N3.txt",T,-1):
                 #print("je suis superieur au seuil")
                 list_ripples[-1][1]=Tp[i+1]#on ajoute l'element de fin 
-                #print(list_ind[-1][1])
                 list_ind[-1][1]=i+1
 #                plt.plot(Tp[i+1],Y[i+1],'r*')
                 pic_max=max_fact*ecart+moy+1 #par défaut on considère que le pic n'est pas un sharpw
-                #print(list_ripples)
-                #sharpw=0
+                
                 #Traiter le cas où le pic max est sur un sommet
                 if list_ripples[-1][1]==list_ripples[-1][0]:#le cas où le point i étudié est un maximum
                     pic_max=[Y[list_ind[-1][0]]]
                     #print("le maximum est un pic")
                     #print(list_max)
+                    
                 #print(list_time_max)
                 if (list_ripples[-1][1]-list_ripples[-1][0]) > 0.02:  #Si le pic est assez large
-                    #On calcule le maximum du pic, soit une interpolation
+                    
                     l_sharpw=Y[list_ind[-1][0]:list_ind[-1][1]]#liste des valeurs de Y etant potentiellement un sharpw
                     pic_max=max(l_sharpw) #le maximum du pic
+                    print('init max',pic_max)
                     #print("je suis assez large mais pic valmax",pic_max,max_fact*ecart+moy)
                     if pic_max<=max_fact*ecart+moy:
-                        #print("je suis ici")
+
                         #print(list_ind[-1][0])
                         #print(pic_max)
                         list_time_max+=[Tp[l_sharpw.index(pic_max)+list_ind[-1][0]]]#l'indice du maximum de pic
                         list_max+=[pic_max]
-                        print(list_time_max)
+                        #print(list_time_max)
                     else:
-                        p#rint("je suis un pic trop grand")
+                        print("je suis un pic trop grand")
                         del list_ripples[-1]
                 else:
-                    p#rint("je suis un pic trop etroit")
+                    print("je suis un pic trop etroit")
                     del list_ripples[-1]
+           
+                
     if opt =='ripples':
-        print ('we test the pic')
-        true_peak=clean_epileptic_pic(char_A,list_time_max,T,h)
+        #print ('we test the pic')
+        #print(list_time_max)
         
+        true_val=clean_epileptic_pic(char_A,list_time_max,list_max,list_ripples[1:],T,h)
+        true_peak=true_val[0]
+        true_list_max=true_val[1]
+        true_list_ripples=true_val[2]
     else:
-        print('we are not testing because we are an A')
+        #print('we are not testing because we are an A')
         true_peak=list_time_max
-    return (true_peak,list_max,list_ripples[1:])
+        true_list_max=list_max
+        true_list_ripples=list_ripples
+        
+    return (true_peak,true_list_max,true_list_ripples)
 
 def sort_sharpw_ripples(char1,char_A,T,opt='ripples',h=20):
     """Trie les pics en trois catégorie et les affiche sur le graphe des puissance"""
@@ -378,9 +385,11 @@ def sort_sharpw_ripples(char1,char_A,T,opt='ripples',h=20):
     plt.plot(U0[0],U0[1],'g*',label="between 3-5 std")
     
     U1=detec_pic(char1,char_A,T,'ripples',5,7,h)
+    print(U1)
     plt.plot(U1[0],U1[1],'b*',label="between 5-7 std")
     
-    U2=detec_pic(char1,T,char_A,'ripples',7,50,h)
+    U2=detec_pic(char1,char_A,T,'ripples',7,100,h)
+    print(U2)
     plt.plot(U2[0],U2[1],'r*',label="above 7 std")
     
     plt.legend()
@@ -447,30 +456,36 @@ def detec_delta_sharp_ripples(char_delta,char_A,char_ripples,T):
     #Y_ripples+=[Y[k] for k in X]
     #print(Y_ripple)
     
-def clean_epileptic_pic(char_A,list_sharpw,T,h):
+def clean_epileptic_pic(char_A,list_sharpw,list_max,list_end_begin,T,h):
     """removes the sharpw that are in fact epileptic pic"""
     #plt.figure(figsize=(20,30))
     #trace(char_A,T)          
     #detec_pic(char_A,char_A,T,opt='A')
-    remove=detec_pic(char_A,char_A,T,'A',3,50,h)[0]#the times when a epileptic pic is detected
+    remove=detec_pic(char_A,char_A,T,'A',4,100,h)[0]#the times when a epileptic pic is detected
     print('picA',remove)
     print('sharpw',list_sharpw)
+    print('begin max', list_max)
     true_sharpw=[] #contient la liste de vraie sharpw 
     compt=0
-    for pic in list_sharpw:
+    true_max=[]
+    true_begin_end=[]
+    for i in range(len(list_sharpw)):
         for elem in remove:
-            if round(pic,1)==round(elem,1):
+            if round(list_sharpw[i],1)==round(elem,1):
                 compt=1
         if compt==0:
-            true_sharpw+=[pic]
-    return true_sharpw
+            true_sharpw+=[list_sharpw[i]]
+            true_max+=[list_max[i]]
+            true_begin_end+=[list_end_begin[i]]
+    print('final max',true_max)
+    return [true_sharpw,true_max,true_begin_end]
     
 
     
 def phase_delta(char_B,char_A,char_O,T,fact_min,fact_max):
     """Determinons la phase du signal delta lorsque le critère sharpw est détecté aux instants appartenant à la liste_t"""
     #On utilise la transformée de Hilbert 
-    Tpuiss,Y=calc_puiss(char_O,T,1,'delta')[1],calc_puiss(char_O,T,1,'delta')[0]
+    Tpuiss,Y=calc_puiss(char_O,char_AT,1,'delta')[1],calc_puiss(char_O,T,1,'delta')[0]
     list_t=detec_pic(char_B,char_A,T,'ripples',fact_min,fact_max,1)[0] #liste des point où on detecte un sharpw entre 3 et 5* l'ecart-type
     print(list_t)
     #Y=np.cos(T)
@@ -498,9 +513,9 @@ def phase_delta(char_B,char_A,char_O,T,fact_min,fact_max):
 
 def stat_phase(char_B,char_A,char_O,T):
     """Gives the distribution of the phase of delta rythmes when a sharpw occurs depending of the amplitude of the pic"""
-    phase35=phase_delta(char_B,char_O,T,3,5)
-    phase57=phase_delta(char_B,char_O,T,5,7)
-    phase7=phase_delta(char_B,char_O,T,7,500)
+    phase35=phase_delta(char_B,char_A,char_O,T,3,5)
+    phase57=phase_delta(char_B,char_A,char_O,T,5,7)
+    phase7=phase_delta(char_B,char_A,char_O,T,7,500)
     plt.figure()
     plt.title('Distribution de la phase en fonction de la detection de sharpwaves ripples')
     plt.subplot(2,2,1)
