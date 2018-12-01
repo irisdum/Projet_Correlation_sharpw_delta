@@ -12,7 +12,7 @@ import scipy.signal as sp
 import scipy
 from scipy import interpolate
 from scipy.interpolate import UnivariateSpline
-time=60
+time=20
 global t0
 t0=30
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à changer selon les ordinateurs 
@@ -276,26 +276,32 @@ def periode_corr(char1,char2,seuil=0.11,opt=1,part=1):
                 plt.plot(0+i+part*512*time,Y[i],'g*')
     return [elem/512 for elem in per][0:-1] #le dernier element ne correspond pas à une différence de temps : on l'enlève
 
-def detec_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=20):
-    """retourne la liste des abscisses du maximum d'amplitude des sharpw ripples"""
+def detec_pic(char1,char_A,T,opt='ripples',fact=3,max_fact=10,h=20):
+    """retourne la liste des abscisses du maximum d'amplitude des sharpw ripples
+    opt : peu valoir 'ripples', 'delta' ou 'A' en fonction de la provenance des signaux"""
     #Y1=open_data(char1)[0:time*512]
     global val_fig
-    Y=calc_puiss(char1,T,h,opt)[0]
-   # Y=normalise_puiss(char1,T,h,opt) #puissance normalisée
-    Tp=calc_puiss(char1,T,h,opt)[1]
+    if opt=='A': #cas ou on cherche des pics epileptique
+       Y=calc_puiss(char1,T,h,'ripples')[0] 
+       Tp=calc_puiss(char1,T,h,'ripples')[1]
+    else:
+        Y=calc_puiss(char1,T,h,opt)[0]
+        # Y=normalise_puiss(char1,T,h,opt) #puissance normalisée
+        Tp=calc_puiss(char1,T,h,opt)[1]
     ecart=np.std(Y)
     moy=np.mean(Y)
     #print(moy)
     seuil=moy+fact*ecart
     #print(seuil)
+    true_peak=[]#contains the time of sharpw detection after checkig it is not epileptic peak
     list_max=[]
     list_time_max=[]#la liste retournée contient les indices des max d'amplitude des sharpw
     list_ripples=[[0,0]] #Initialisation
     list_ind=[[0,0]]#contient les indices des moment ou un pic est détectée
     #fin_ripples=[]#contient le temps de fin du ripples noté en list_ripples  
     
-    if opt=='A':
-        fact=8 #augmente pour la detection de pic épileptique
+#    if opt=='A':
+#        fact=8 #augmente pour la detection de pic épileptique
     if val_fig==1:
         plt.subplot(2,1,2)
         val_fig+=1
@@ -331,27 +337,35 @@ def detec_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=20):
                     pic_max=[Y[list_ind[-1][0]]]
                     #print("le maximum est un pic")
                     #print(list_max)
-                #@print(list_time_max)
+                #print(list_time_max)
                 if (list_ripples[-1][1]-list_ripples[-1][0]) > 0.02:  #Si le pic est assez large
                     #On calcule le maximum du pic, soit une interpolation
                     l_sharpw=Y[list_ind[-1][0]:list_ind[-1][1]]#liste des valeurs de Y etant potentiellement un sharpw
                     pic_max=max(l_sharpw) #le maximum du pic
                     #print("je suis assez large mais pic valmax",pic_max,max_fact*ecart+moy)
-                if pic_max<=max_fact*ecart+moy:
-                    #print("je suis ici")
-                    #print(list_ind[-1][0])
-                    #print(pic_max)
-                    list_time_max+=[Tp[l_sharpw.index(pic_max)+list_ind[-1][0]]]#l'indice du maximum de pic
-                    list_max+=[pic_max]
+                    if pic_max<=max_fact*ecart+moy:
+                        #print("je suis ici")
+                        #print(list_ind[-1][0])
+                        #print(pic_max)
+                        list_time_max+=[Tp[l_sharpw.index(pic_max)+list_ind[-1][0]]]#l'indice du maximum de pic
+                        list_max+=[pic_max]
+                        print(list_time_max)
+                    else:
+                        p#rint("je suis un pic trop grand")
+                        del list_ripples[-1]
                 else:
-                    #print("je suis un pic trop grand")
+                    p#rint("je suis un pic trop etroit")
                     del list_ripples[-1]
-                #print(list_ripples)
-                        #plt.plot(Tp[list_index_max[-1]],pic_max,'r.')
-                
-    return (list_time_max,list_max,list_ripples[1:])
+    if opt =='ripples':
+        print ('we test the pic')
+        true_peak=clean_epileptic_pic(char_A,list_time_max,T,h)
+        
+    else:
+        print('we are not testing because we are an A')
+        true_peak=list_time_max
+    return (true_peak,list_max,list_ripples[1:])
 
-def sort_sharpw_ripples(char1,T,opt='ripples',h=20):
+def sort_sharpw_ripples(char1,char_A,T,opt='ripples',h=20):
     """Trie les pics en trois catégorie et les affiche sur le graphe des puissance"""
     plt.figure(figsize=(30,15))
     #aff_puiss(char1,T)
@@ -359,14 +373,14 @@ def sort_sharpw_ripples(char1,T,opt='ripples',h=20):
     
     aff_puiss(char1,T)
     
-    U0=detec_pic(char1,T,'ripples',3,5,h)
+    U0=detec_pic(char1,char_A,T,'ripples',3,5,h)
     print(U0)
     plt.plot(U0[0],U0[1],'g*',label="between 3-5 std")
     
-    U1=detec_pic(char1,T,'ripples',5,7,h)
+    U1=detec_pic(char1,char_A,T,'ripples',5,7,h)
     plt.plot(U1[0],U1[1],'b*',label="between 5-7 std")
     
-    U2=detec_pic(char1,T,'ripples',7,50,h)
+    U2=detec_pic(char1,T,char_A,'ripples',7,50,h)
     plt.plot(U2[0],U2[1],'r*',label="above 7 std")
     
     plt.legend()
@@ -374,7 +388,7 @@ def sort_sharpw_ripples(char1,T,opt='ripples',h=20):
     
 def vect_detect_pic(char1,T,opt='ripples',fact=3,max_fact=10):
     """retourne un vecteur de 0 et et de 1 correspondant à la detection de pic. Soit 1 quand la valeur du signal correspond à un pic sharpw 0 sinon"""
-    U0=detec_pic(char1,T,opt,fact,max_fact,1)[2]
+    U0=detec_pic(char1,char_A,T,opt,fact,max_fact,1)[2]
     print(len(T))
     vect=[]#liste qui ca contenir les 0 et les 1
     i=0
@@ -402,27 +416,27 @@ def vect_detect_pic(char1,T,opt='ripples',fact=3,max_fact=10):
     #plt.show()    
     return vect
     
-def detect_delta(char_delta,T,h):
+def detect_delta(char_delta,char_A,T,h):
     """Detecte les pics supposés caractéristique des rythmes delta du cerveau selon un critère d'amplitude"""
     plt.figure(figsize=(30,15))
     plt.subplot(2,1,1)
     aff_puiss(char_delta,T,h,'delta')
-    Ud2=detec_pic(char_delta,T,'delta',2,100,h);#On considère uniquement les pics élevés
+    Ud2=detec_pic(char_delta,char_A,T,'delta',2,100,h);#On considère uniquement les pics élevés
     plt.plot(Ud2[0],Ud2[1],'r*',label='above 2 std')
-    #Ud1=detec_pic(char_delta,T,'delta',0.3,2,h);#déterminé arbitrairement, pour avoir des pics intéressant
+    #Ud1=detec_pic(char_delta,char_A,T,'delta',0.3,2,h);#déterminé arbitrairement, pour avoir des pics intéressant
     #plt.plot(Ud1[0],Ud1[1],'b*',label='between 0.3 and two std')
     plt.title("Detection de pic delta "+char_delta[66:-4])
     plt.legend()
 
    
     
-def detec_delta_sharp_ripples(char_delta,char_ripples,T):
+def detec_delta_sharp_ripples(char_delta,char_A,char_ripples,T):
     """detecte sur la puissance d'un signal delta si il y a des signaux ripples
     """
 
     
     #T=calc_puiss(char_delta,T,h=20,opt='delta')[1]
-    X=detec_pic(char_ripples,T)[0]
+    X=detec_pic(char_ripples,char_A,T)[0]
     aff_puiss(char_delta,T,h=20,opt='delta')
     #print(X)
     for elem in X:
@@ -433,23 +447,31 @@ def detec_delta_sharp_ripples(char_delta,char_ripples,T):
     #Y_ripples+=[Y[k] for k in X]
     #print(Y_ripple)
     
-def detec_epileptic_pic(char_A,char_B,T):
-    """Affiche à la fois le graphe brut signal A, le signal filtré en puissance issus des electrode A et issu electrode B"""
-    plt.figure(figsize=(20,30))
-    plt.subplot(3,1,1) #penser à commenter des bouts de certaines partie de code afin que tout s'affiche bien 
-    trace(char_A,T)          
-    plt.subplot(3,1,2)
-    detec_pic(char_A,T,opt='A')
-    plt.subplot(3,1,3)
-    detec_pic(char_B,T)
-    plt.xlabel('temps en seconde')
+def clean_epileptic_pic(char_A,list_sharpw,T,h):
+    """removes the sharpw that are in fact epileptic pic"""
+    #plt.figure(figsize=(20,30))
+    #trace(char_A,T)          
+    #detec_pic(char_A,char_A,T,opt='A')
+    remove=detec_pic(char_A,char_A,T,'A',3,50,h)[0]#the times when a epileptic pic is detected
+    print('picA',remove)
+    print('sharpw',list_sharpw)
+    true_sharpw=[] #contient la liste de vraie sharpw 
+    compt=0
+    for pic in list_sharpw:
+        for elem in remove:
+            if round(pic,1)==round(elem,1):
+                compt=1
+        if compt==0:
+            true_sharpw+=[pic]
+    return true_sharpw
+    
 
     
-def phase_delta(char_B,char_O,T,fact_min,fact_max):
+def phase_delta(char_B,char_A,char_O,T,fact_min,fact_max):
     """Determinons la phase du signal delta lorsque le critère sharpw est détecté aux instants appartenant à la liste_t"""
     #On utilise la transformée de Hilbert 
     Tpuiss,Y=calc_puiss(char_O,T,1,'delta')[1],calc_puiss(char_O,T,1,'delta')[0]
-    list_t=detec_pic(char_B,T,'ripples',fact_min,fact_max,1)[0] #liste des point où on detecte un sharpw entre 3 et 5* l'ecart-type
+    list_t=detec_pic(char_B,char_A,T,'ripples',fact_min,fact_max,1)[0] #liste des point où on detecte un sharpw entre 3 et 5* l'ecart-type
     print(list_t)
     #Y=np.cos(T)
     signal_analytic=sp.hilbert(Y)
@@ -474,7 +496,7 @@ def phase_delta(char_B,char_O,T,fact_min,fact_max):
     #print(phase_detec)
     return phase_detec
 
-def stat_phase(char_B,char_O,T):
+def stat_phase(char_B,char_A,char_O,T):
     """Gives the distribution of the phase of delta rythmes when a sharpw occurs depending of the amplitude of the pic"""
     phase35=phase_delta(char_B,char_O,T,3,5)
     phase57=phase_delta(char_B,char_O,T,5,7)
@@ -493,9 +515,9 @@ def stat_phase(char_B,char_O,T):
     plt.show()
     
     
-def statistic_sharpw(char1,T,fact=3,max_fact=10,h=20):
+def statistic_sharpw(char1,char_A,T,fact=3,max_fact=10,h=20):
     """Fonction qui retourne le nombre de sharpw detectés, leur amplitude max, la moyenne et l'ecart-type"""
-    U0=detec_pic(char1,T,'ripples',fact,max_fact,h)[1]#liste contenant les maximum d'amplitude
+    U0=detec_pic(char1,char_A,T,'ripples',fact,max_fact,h)[1]#liste contenant les maximum d'amplitude
     print('Moyenne des pic d amplitude comprise est ',np.mean(U0))
     print('Deviation moyenne' ,(np.std(U0)))
     print('Valeur maximal', (np.max(U0)))

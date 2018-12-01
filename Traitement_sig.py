@@ -8,13 +8,13 @@ Created on Sun Nov  4 14:28:31 2018
 
 from Traitement_fich import*
 
-time=60
+time=20
 
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à changer selon les ordinateurs
 
 #T=open_data(chemin+'BP1-BP2_Temps.txt')[0:time*512] 
 T=[round(i/512,6) for i in range(1,time*512+1)]
-
+char_A=chemin+"A'2-A'1N3.txt" #a changer en fonction de la taille de l'extrait considéré
 
 ##Affichons les signaux bruts
 
@@ -49,25 +49,25 @@ T=[round(i/512,6) for i in range(1,time*512+1)]
 #print(np.mean(periode_corr(chemin+"B'2-B'1N3.txt",chemin+"O'9-O'8N3.txt",0.10,1,0)))
 
 ##Etudions si les sharpw sont détécté à peu près au même moment pour deux electrodes proches dans l'hippocampe
-#detec_pic(chemin+"B'4-B'3N3.txt",T,3,5,1)
-#detec_pic(chemin+"B'2-B'1N3.txt",T)
-#detec_pic(chemin+"B'3-B'2N3_120s.txt",T)
+#detec_pic(chemin+"B'4-B'3N3.txt",char_A,T,3,5,1)
+#detec_pic(chemin+"B'2-B'1N3.txt",char_A,T)
+print(detec_pic(chemin+"B3-B2N3_120s.txt",char_A,T)[0])
 #Etudions les differents type de sharpw soit trié en fonction de leur écart à la moyenne
-#sort_sharpw_ripples(chemin+"B3-B2N3_120s.txt",'ripples',1)
-#sort_sharpw_ripples(chemin+"B'3-B'2N3.txt",T,'ripples',1)
+#sort_sharpw_ripples(chemin+"B3-B2N3_120s.txt",char_A,'ripples',1)
+#sort_sharpw_ripples(chemin+"B'3-B'2N3.txt",char_A,T,'ripples',1)
 #
 ##Etudions si des sharps waves rippples coincident graphiquement avec l'apparition de delta
 
-#detec_delta_sharp_ripples(chemin+"O'9-O'8N3.txt",chemin+"B'2-B'1N3.txt")
+#detec_delta_sharp_ripples(chemin+"O'9-O'8N3.txt",char_A,chemin+"B'2-B'1N3.txt")
 
 ##Verifions que les pics observé correspondent bien à des sharpw et non des pics epileptique
 
 #detec_epileptic_pic(chemin+ "A'2-A'1N3.txt",chemin+"B'4-B'3N3.txt",T)
-
+#clean_epileptic_pic(chemin+ "A'2-A'1N3.txt",chemin+"B'4-B'3N3.txt",T,1)
 #récupérons la phase du signal lorsqu'un sharpw est détecté
-#phase_delta(chemin+"B'3-B'2N3.txt",chemin+"O'9-O'8N3.txt",T,3,5)
+#phase_delta(chemin+"B'3-B'2N3.txt",char_A,chemin+"O'9-O'8N3.txt",T,3,5)
 #Determinons les valeurs des phases trouvées en fonction de l'amplitude du sharpw détectées
-stat_phase(chemin+"B'3-B'2N3_60s.txt",chemin+"O'9-O'8N3_60s.txt",T)
+#stat_phase(chemin+"B'3-B'2N3_60s.txt",char_A,chemin+"O'9-O'8N3_60s.txt",T)
 
 #Comparons les vecteurs detectiion pour delta et sharpw
 #charB=chemin+"B3-B2N3_60s.txt"
@@ -82,6 +82,6 @@ stat_phase(chemin+"B'3-B'2N3_60s.txt",chemin+"O'9-O'8N3_60s.txt",T)
 #char_B=chemin+"B3-B2N3_120s.txt"
 #char_Bp=chemin+"B'3-B'2N3_120s.txt"
 #print("Cas de "+ char_B[66:-4])
-#statistic_sharpw(char_B,T,3,10,20)
+#statistic_sharpw(char_B,char_A,T,3,10,20)
 #print("Cas de "+ char_Bp[66:-4])
-#statistic_sharpw(char_Bp,T,3,10,20)
+#statistic_sharpw(char_Bp,char_A,T,3,10,20)
