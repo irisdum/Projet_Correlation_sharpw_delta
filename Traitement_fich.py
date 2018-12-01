@@ -12,7 +12,7 @@ import scipy.signal as sp
 import scipy
 from scipy import interpolate
 from scipy.interpolate import UnivariateSpline
-time=50
+time=60
 global t0
 t0=30
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à changer selon les ordinateurs 
@@ -142,7 +142,7 @@ def filtre(char,T,opt='ripples'):
     Y=open_data(char)[0:time*512]
     #T=open_data('BP1-BP2_Temps.txt')[0:20*512]
     if opt=='ripples' : 
-        low,high=120/nyq,250/nyq
+        low,high=120/nyq,250/nyq #on pourra toujours modifier cette bande si moyennement satisfait des résultats
     if opt=='delta':
         low,high=1/nyq,4/nyq #correspond à la bande de fréquence du filtrage
     b,a = sp.butter(2,[low,high],btype="bandpass")
@@ -164,16 +164,21 @@ def filtre(char,T,opt='ripples'):
 
 def calc_puiss(char,T,h=20,opt='ripples'):
     """retourne un vecteur puissance du signal sur une portion delta et par saut de h. on compte en nombre de point"""
-    Y=filtre(char,T,opt)
+    
     #T=open_data('BP1-BP2_Temps.txt')[0:20*512]
     
     puiss=[]
     Tpuiss=[]
     #Ti=[] #contient les i pour correspondant au temps
     if opt=='ripples':
+        Y=filtre(char,T,opt)
         delta=50
-    if opt =='delta':
+    elif opt =='delta':
         delta=500 #correspond à la variation de la fenetre
+        Y=filtre(char,T,opt)
+    else : 
+        Y=open_data(char)[0:time*512] #cas ou on cherche la puissance sans filtre
+        delta= 50 #a changer en fonction de ce qui est normalisé
     i=0
     while i<=512*time-delta:#On a pas la puissance des derniers points à voir 
         #print(i+delta)
@@ -188,7 +193,10 @@ def calc_puiss(char,T,h=20,opt='ripples'):
 
 def aff_puiss(char,T,h=20,opt='ripples'):
     global val_fig
-    Tpuiss,puiss=calc_puiss(char,T,h,opt)[1],calc_puiss(char,T,h,opt)[0]
+    Tpuiss=calc_puiss(char,T,h,opt)[1]
+    puiss=calc_puiss(char,T,h,opt)[0]#signal non normalisé
+    #puiss=normalise_puiss(char,T,h,opt)
+    
     #plt.subplot(2,1,2)
 #    plt.plot(Tpuiss,puiss,c='orange')  
     if opt=='delta':
@@ -273,6 +281,7 @@ def detec_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=20):
     #Y1=open_data(char1)[0:time*512]
     global val_fig
     Y=calc_puiss(char1,T,h,opt)[0]
+   # Y=normalise_puiss(char1,T,h,opt) #puissance normalisée
     Tp=calc_puiss(char1,T,h,opt)[1]
     ecart=np.std(Y)
     moy=np.mean(Y)
@@ -298,7 +307,7 @@ def detec_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=20):
     #aff_puiss(char1,T)
     for i in range(1,len(Tp)-1):
         #print(list_ripples)
-        if seuil<Y[i]:#il faut voir le cas où le les valeurs de départ ont déja dans sharpw dans ces cas là on a un problem d'index out of range 
+        if seuil<Y[i]:#il faut voir le cas où les valeurs de départ ont déja dans sharpw dans ces cas là on a un problem d'index out of range 
             if (Y[i-1]<seuil):#vérifie que l'élément d'avant n'était pas dans un ripple
                 #if is_epil_pic(i,chemin+"A'2-A'1N3.txt",T,1):
                 list_ripples+=[[Tp[i],Tp[i]]]
@@ -309,40 +318,35 @@ def detec_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=20):
                 #fin_ripples+=[Tp[i]]
             if (Y[i+1]<seuil): # le cas ou l'element d'après n'est plus au dessus du seuil et que le debut de l'extrait n'a pas commence sur un pic 
                 #if is_epil_pic(i,chemin+"A'2-A'1N3.txt",T,-1):
+                #print("je suis superieur au seuil")
                 list_ripples[-1][1]=Tp[i+1]#on ajoute l'element de fin 
                 #print(list_ind[-1][1])
                 list_ind[-1][1]=i+1
 #                plt.plot(Tp[i+1],Y[i+1],'r*')
-                pic_max=max_fact*ecart+moy #par défaut on condière que le pic n'est pas un sharpw
-#                print(list_ripples)
+                pic_max=max_fact*ecart+moy+1 #par défaut on considère que le pic n'est pas un sharpw
+                #print(list_ripples)
                 #sharpw=0
                 #Traiter le cas où le pic max est sur un sommet
                 if list_ripples[-1][1]==list_ripples[-1][0]:#le cas où le point i étudié est un maximum
                     pic_max=[Y[list_ind[-1][0]]]
+                    #print("le maximum est un pic")
                     #print(list_max)
                 #@print(list_time_max)
                 if (list_ripples[-1][1]-list_ripples[-1][0]) > 0.02:  #Si le pic est assez large
                     #On calcule le maximum du pic, soit une interpolation
                     l_sharpw=Y[list_ind[-1][0]:list_ind[-1][1]]#liste des valeurs de Y etant potentiellement un sharpw
                     pic_max=max(l_sharpw) #le maximum du pic
-                    if pic_max<=max_fact*ecart+moy:
-                        #print(list_ind[-1][0])
-                      
-                        if(is_epil_pic(list_ind[-1][0],chemin+"A'2-A'1N3.txt",T,1)):
-                           # print(pic_max)
-                        #print
-                        #print(l_sharpw.index(pic_max))
-                            list_time_max+=[Tp[l_sharpw.index(pic_max)+list_ind[-1][0]]]#l'indice du maximum de pic
-                            list_max+=[pic_max]
-                        else:
-                          
-                            del list_ripples[-1]    
-                    else:
-                        del list_ripples[-1]
-
+                    #print("je suis assez large mais pic valmax",pic_max,max_fact*ecart+moy)
+                if pic_max<=max_fact*ecart+moy:
+                    #print("je suis ici")
+                    #print(list_ind[-1][0])
+                    #print(pic_max)
+                    list_time_max+=[Tp[l_sharpw.index(pic_max)+list_ind[-1][0]]]#l'indice du maximum de pic
+                    list_max+=[pic_max]
                 else:
+                    #print("je suis un pic trop grand")
                     del list_ripples[-1]
-                    #print(list_ripples)
+                #print(list_ripples)
                         #plt.plot(Tp[list_index_max[-1]],pic_max,'r.')
                 
     return (list_time_max,list_max,list_ripples[1:])
@@ -352,10 +356,11 @@ def sort_sharpw_ripples(char1,T,opt='ripples',h=20):
     plt.figure(figsize=(30,15))
     #aff_puiss(char1,T)
     #recoltons les pics compris entre 3 et 5 fois l'ecart type
-
+    
     aff_puiss(char1,T)
     
     U0=detec_pic(char1,T,'ripples',3,5,h)
+    print(U0)
     plt.plot(U0[0],U0[1],'g*',label="between 3-5 std")
     
     U1=detec_pic(char1,T,'ripples',5,7,h)
@@ -440,28 +445,53 @@ def detec_epileptic_pic(char_A,char_B,T):
     plt.xlabel('temps en seconde')
 
     
-def phase_delta(char_B,char_O,T,h):
+def phase_delta(char_B,char_O,T,fact_min,fact_max):
     """Determinons la phase du signal delta lorsque le critère sharpw est détecté aux instants appartenant à la liste_t"""
     #On utilise la transformée de Hilbert 
-    Tpuiss,Y=calc_puiss(char_O,T,h,'delta')[1],calc_puiss(char_O,T,h,'delta')[0]
-    list_t=detec_pic(char_B,T)[0] #liste des point où on detecte un sharpw
+    Tpuiss,Y=calc_puiss(char_O,T,1,'delta')[1],calc_puiss(char_O,T,1,'delta')[0]
+    list_t=detec_pic(char_B,T,'ripples',fact_min,fact_max,1)[0] #liste des point où on detecte un sharpw entre 3 et 5* l'ecart-type
+    print(list_t)
     #Y=np.cos(T)
     signal_analytic=sp.hilbert(Y)
     phase_instantaneous=np.angle(signal_analytic)#on a bien une periodicité de la phase compris entre [-pi,pi]]
-    fig=plt.figure(figsize=(30,15))
-    ax0=fig.add_subplot(211)
-    ax0.plot(Tpuiss,Y,label='signal')
-    ax0.legend()
-    plt.title(char_O[66:-4])
+    phase_detec=[] #liste containing the phase of delta rythmes when a sharpw is detected
+    #fig=plt.figure(figsize=(30,15))
+    #ax0=fig.add_subplot(211)
+    #ax0.plot(Tpuiss,Y,label='signal')
+    #ax0.legend()
+    #plt.title(char_O[66:-4])
+    
     #ax3=fig.add_subplot(312)
     #list_t=detec_pic(char_B,T) 
-    ax2=fig.add_subplot(212)
-    plt.title("phase de la puissance du signal "+char_O[66:-4])
-    ax2.plot(Tpuiss,phase_instantaneous)
-    ax2.set_xlabel("time in seconds")
+    #ax2=fig.add_subplot(212)
+    #plt.title("phase de la puissance du signal "+char_O[66:-4])
+    #ax2.plot(Tpuiss,phase_instantaneous)
+    #ax2.set_xlabel("time in seconds")
     for elem in list_t:
-        ax2.axvline(x=elem,color='r')
-    return phase_instantaneous
+        phase_detec+=[phase_instantaneous[round(elem*512)]]
+     #   ax2.axvline(x=elem,color='r')
+        
+    #print(phase_detec)
+    return phase_detec
+
+def stat_phase(char_B,char_O,T):
+    """Gives the distribution of the phase of delta rythmes when a sharpw occurs depending of the amplitude of the pic"""
+    phase35=phase_delta(char_B,char_O,T,3,5)
+    phase57=phase_delta(char_B,char_O,T,5,7)
+    phase7=phase_delta(char_B,char_O,T,7,500)
+    plt.figure()
+    plt.title('Distribution de la phase en fonction de la detection de sharpwaves ripples')
+    plt.subplot(2,2,1)
+    plt.hist(phase35,label="sharpw between 3 and 5 std",color='green')
+    plt.legend(loc=4)
+    plt.subplot(2,2,2)
+    plt.hist(phase57,label= "sharpw between 5 and 7 std",color='blue')
+    plt.legend(loc=4)
+    plt.subplot(2,2,3)
+    plt.hist(phase7,label= "sharpw above 7",color='red')
+    plt.legend()
+    plt.show()
+    
     
 def statistic_sharpw(char1,T,fact=3,max_fact=10,h=20):
     """Fonction qui retourne le nombre de sharpw detectés, leur amplitude max, la moyenne et l'ecart-type"""
@@ -477,20 +507,33 @@ def is_epil_pic(ind,char_A,T,opt=1):
     ##Il faut étudier si il y a un pic dans le signal A
     #On calcule la puissance du signal A
   
-
+    #plt.figure()
     #filtre(char_A,T)
     fact=6 # determiné empiriquement là où il y a des pics significatif
     #print('ici et ',ind)
     puiss_A=calc_puiss(char_A,T,1,'ripples')[0] 
-  
+    plt.show()
     ecart=np.std(puiss_A)
     moy=np.mean(puiss_A)
 #    print(puiss_A[ind:ind+100])
     #On calcule la valeur moyenne sur 20ms si celle ci est superieur à x fois la valeur moyenne de la puissance, on élimine la valeur de t
     val=max(puiss_A[ind:ind+100])
+    print(val)
     if val>moy+fact*ecart:
+        print("c'est un pic epileptique")
         plt.axvline(x=ind/512)
         return 0
     else:
         return 1
+    
+    
+def normalise_puiss(char,T,h=1,opt='ripples'):
+    """fonction qui prend en entrée le chemin vers le fichier et qui renvoie un vecteur correspondant à la puissance normalisée"""
+    Y=calc_puiss(char,T,h,'brut')[0] #signal puissance non filtré
+    moy=np.mean(Y)
+    print(moy)
+    Y2=calc_puiss(char,T,h,opt)[0] #puissance filtré sur la bande voulu
+    return [i/moy for i in Y2] #puissance normalisée
+    
+
     
