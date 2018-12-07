@@ -67,7 +67,7 @@ char_A=chemin+"A'2-A'1N3.txt" #a changer en fonction de la taille de l'extrait c
 #récupérons la phase du signal lorsqu'un sharpw est détecté
 #phase_delta(chemin+"B'3-B'2N3.txt",char_A,chemin+"O'9-O'8N3.txt",T,3,5)
 #Determinons les valeurs des phases trouvées en fonction de l'amplitude du sharpw détectées
-#stat_phase(chemin+"B'3-B'2N3_60s.txt",char_A,chemin+"O'9-O'8N3_60s.txt",T)
+stat_phase(chemin+"B'2-B'1N3_60s.txt",char_A,chemin+"O'9-O'8N3_60s.txt",T)
 
 #Comparons les vecteurs detectiion pour delta et sharpw
 #charB=chemin+"B3-B2N3_60s.txt"

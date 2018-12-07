@@ -339,7 +339,7 @@ def detec_pic(char1,char_A,T,opt='ripples',fact=3,max_fact=10,h=20):
                     
                     l_sharpw=Y[list_ind[-1][0]:list_ind[-1][1]]#liste des valeurs de Y etant potentiellement un sharpw
                     pic_max=max(l_sharpw) #le maximum du pic
-                    print('init max',pic_max)
+                    #print('init max',pic_max)
                     #print("je suis assez large mais pic valmax",pic_max,max_fact*ecart+moy)
                     if pic_max<=max_fact*ecart+moy:
 
@@ -349,10 +349,10 @@ def detec_pic(char1,char_A,T,opt='ripples',fact=3,max_fact=10,h=20):
                         list_max+=[pic_max]
                         #print(list_time_max)
                     else:
-                        print("je suis un pic trop grand")
+                        #print("je suis un pic trop grand")
                         del list_ripples[-1]
                 else:
-                    print("je suis un pic trop etroit")
+                    #print("je suis un pic trop etroit")
                     del list_ripples[-1]
            
                 
@@ -381,15 +381,15 @@ def sort_sharpw_ripples(char1,char_A,T,opt='ripples',h=20):
     aff_puiss(char1,T)
     
     U0=detec_pic(char1,char_A,T,'ripples',3,5,h)
-    print(U0)
+    #print(U0)
     plt.plot(U0[0],U0[1],'g*',label="between 3-5 std")
     
     U1=detec_pic(char1,char_A,T,'ripples',5,7,h)
-    print(U1)
+    #print(U1)
     plt.plot(U1[0],U1[1],'b*',label="between 5-7 std")
     
     U2=detec_pic(char1,char_A,T,'ripples',7,100,h)
-    print(U2)
+    #print(U2)
     plt.plot(U2[0],U2[1],'r*',label="above 7 std")
     
     plt.legend()
@@ -485,7 +485,7 @@ def clean_epileptic_pic(char_A,list_sharpw,list_max,list_end_begin,T,h):
 def phase_delta(char_B,char_A,char_O,T,fact_min,fact_max):
     """Determinons la phase du signal delta lorsque le critère sharpw est détecté aux instants appartenant à la liste_t"""
     #On utilise la transformée de Hilbert 
-    Tpuiss,Y=calc_puiss(char_O,char_AT,1,'delta')[1],calc_puiss(char_O,T,1,'delta')[0]
+    Tpuiss,Y=calc_puiss(char_O,T,1,'delta')[1],calc_puiss(char_O,T,1,'delta')[0]
     list_t=detec_pic(char_B,char_A,T,'ripples',fact_min,fact_max,1)[0] #liste des point où on detecte un sharpw entre 3 et 5* l'ecart-type
     print(list_t)
     #Y=np.cos(T)
@@ -517,7 +517,7 @@ def stat_phase(char_B,char_A,char_O,T):
     phase57=phase_delta(char_B,char_A,char_O,T,5,7)
     phase7=phase_delta(char_B,char_A,char_O,T,7,500)
     plt.figure()
-    plt.title('Distribution de la phase en fonction de la detection de sharpwaves ripples')
+    plt.title('Distribution de la phase en fonction de la detection de sharpwaves ripples'+char_B[66:-4])
     plt.subplot(2,2,1)
     plt.hist(phase35,label="sharpw between 3 and 5 std",color='green')
     plt.legend(loc=4)
@@ -538,30 +538,6 @@ def statistic_sharpw(char1,char_A,T,fact=3,max_fact=10,h=20):
     print('Valeur maximal', (np.max(U0)))
     print('Valeur minimal',(np.min(U0)))
     print('nombre de sharpw détécté', len(U0))
-    
-def is_epil_pic(ind,char_A,T,opt=1):
-    """Fonction qui retourne vrai si le pic à l'indice ind de la liste correspond à un pic epileptic false sinon"""
-    ##Il faut étudier si il y a un pic dans le signal A
-    #On calcule la puissance du signal A
-  
-    #plt.figure()
-    #filtre(char_A,T)
-    fact=6 # determiné empiriquement là où il y a des pics significatif
-    #print('ici et ',ind)
-    puiss_A=calc_puiss(char_A,T,1,'ripples')[0] 
-    plt.show()
-    ecart=np.std(puiss_A)
-    moy=np.mean(puiss_A)
-#    print(puiss_A[ind:ind+100])
-    #On calcule la valeur moyenne sur 20ms si celle ci est superieur à x fois la valeur moyenne de la puissance, on élimine la valeur de t
-    val=max(puiss_A[ind:ind+100])
-    print(val)
-    if val>moy+fact*ecart:
-        print("c'est un pic epileptique")
-        plt.axvline(x=ind/512)
-        return 0
-    else:
-        return 1
     
     
 def normalise_puiss(char,T,h=1,opt='ripples'):
