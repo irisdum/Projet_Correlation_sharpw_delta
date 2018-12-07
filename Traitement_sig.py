@@ -14,7 +14,7 @@ chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à
 
 #T=open_data(chemin+'BP1-BP2_Temps.txt')[0:time*512] 
 T=[round(i/512,6) for i in range(1,time*512+1)]
-char_A=chemin+"A'2-A'1N3.txt" #a changer en fonction de la taille de l'extrait considéré
+char_A=chemin+"A'2-A'1_120s.txt" #a changer en fonction de la taille de l'extrait considéré
 
 ##Affichons les signaux bruts
 

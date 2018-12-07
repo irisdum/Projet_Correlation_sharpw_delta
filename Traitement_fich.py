@@ -186,7 +186,7 @@ def calc_puiss(char,T,h=20,opt='ripples'):
         Tpuiss+=[i/512]
         #Ti+=[i]
         i=i+h
-    #print(len(Tpuipuiss))
+    print("taille t , p ",len(Tpuiss),len(Tpuiss))
     
    
     return (puiss,Tpuiss)
@@ -300,10 +300,7 @@ def detec_pic(char1,char_A,T,opt='ripples',fact=3,max_fact=10,h=20):
     list_time_max=[]#la liste retournée contient les indices des max d'amplitude des sharpw
     list_ripples=[[0,0]] #Initialisation
     list_ind=[[0,0]]#contient les indices des moment ou un pic est détectée
-    #fin_ripples=[]#contient le temps de fin du ripples noté en list_ripples  
-    
-#    if opt=='A':
-#        fact=8 #augmente pour la detection de pic épileptique
+  
     if val_fig==1:
         plt.subplot(2,1,2)
         val_fig+=1
@@ -312,17 +309,16 @@ def detec_pic(char1,char_A,T,opt='ripples',fact=3,max_fact=10,h=20):
         plt.subplot(2,1,1)
         val_fig+=1
        
-    #aff_puiss(char1,T)
+
     for i in range(1,len(Tp)-1):
-        #print(list_ripples)
+        
         if seuil<Y[i]: 
             if (Y[i-1]<seuil):#vérifie que l'élément d'avant n'était pas dans un ripple
              
                 list_ripples+=[[Tp[i],Tp[i]]]
                 list_ind+=[[i,i]]
             if (Y[i+1]<seuil): # le cas ou l'element d'après n'est plus au dessus du seuil et que le debut de l'extrait n'a pas commence sur un pic 
-                #if is_epil_pic(i,chemin+"A'2-A'1N3.txt",T,-1):
-                #print("je suis superieur au seuil")
+              
                 list_ripples[-1][1]=Tp[i+1]#on ajoute l'element de fin 
                 list_ind[-1][1]=i+1
 #                plt.plot(Tp[i+1],Y[i+1],'r*')
@@ -368,7 +364,7 @@ def detec_pic(char1,char_A,T,opt='ripples',fact=3,max_fact=10,h=20):
         #print('we are not testing because we are an A')
         true_peak=list_time_max
         true_list_max=list_max
-        true_list_ripples=list_ripples
+        true_list_ripples=list_ripples[1:]
         
     return (true_peak,true_list_max,true_list_ripples)
 
@@ -395,33 +391,37 @@ def sort_sharpw_ripples(char1,char_A,T,opt='ripples',h=20):
     plt.legend()
     
     
-def vect_detect_pic(char1,T,opt='ripples',fact=3,max_fact=10):
+def vect_detect_pic(char1,char_A,T,opt='ripples',fact=3,max_fact=10):
     """retourne un vecteur de 0 et et de 1 correspondant à la detection de pic. Soit 1 quand la valeur du signal correspond à un pic sharpw 0 sinon"""
     U0=detec_pic(char1,char_A,T,opt,fact,max_fact,1)[2]
-    print(len(T))
+    #print(len(T))
+    print(U0)
     vect=[]#liste qui ca contenir les 0 et les 1
     i=0
+    #print("taille T", len(T))   
+    if U0==[[0,0]]:
+        print('pas de pic')
+        return [0 for i in range(len(T))] 
     for elem in T:
         if i<len(U0):# qd on a détecté tous les sharpw ripples
-            if  elem>=U0[i][0]:
+            if  elem>=U0[i][0]:#on est dans le pic
                 if elem<round(U0[i][1],6):
                     vect+=[1]
                 if elem==round(U0[i][1],6):
                     vect+=[1]
-                    i+=1
-                    
+                    i+=1 #fin de detection
             else:
                 vect+=[0]
         else:
             vect+=[0] #on a detecté tous les sharpw ripples
     #print(vect)
-    #print('taille vect', len(vect[:-1])) #j'ai un pb de dimension de vecteurs : bizarre
+    #print('taille vect', len(vect[:-1])) 
     #plt.title("Detection sharpw signal "+char1[66:-4])
-    plt.grid()
+   # plt.grid()
     #plt.figure(figsize=(15,30))
    # plt.subplot(2,1,2)
     #print("T et vect" ,len(T),len(vect))
-    plt.plot(T,vect,label="Detection sharpw signal "+char1[66:-4])
+    #plt.plot(T,vect,label="Detection sharpw signal "+char1[66:-4])
     #plt.show()    
     return vect
     
@@ -462,9 +462,9 @@ def clean_epileptic_pic(char_A,list_sharpw,list_max,list_end_begin,T,h):
     #trace(char_A,T)          
     #detec_pic(char_A,char_A,T,opt='A')
     remove=detec_pic(char_A,char_A,T,'A',4,100,h)[0]#the times when a epileptic pic is detected
-    print('picA',remove)
-    print('sharpw',list_sharpw)
-    print('begin max', list_max)
+    #print('picA',remove)
+    #print('sharpw',list_sharpw)
+    #print('begin max', list_max)
     true_sharpw=[] #contient la liste de vraie sharpw 
     compt=0
     true_max=[]
@@ -477,7 +477,7 @@ def clean_epileptic_pic(char_A,list_sharpw,list_max,list_end_begin,T,h):
             true_sharpw+=[list_sharpw[i]]
             true_max+=[list_max[i]]
             true_begin_end+=[list_end_begin[i]]
-    print('final max',true_max)
+    #print('final max',true_max)
     return [true_sharpw,true_max,true_begin_end]
     
 
@@ -487,7 +487,7 @@ def phase_delta(char_B,char_A,char_O,T,fact_min,fact_max):
     #On utilise la transformée de Hilbert 
     Tpuiss,Y=calc_puiss(char_O,T,1,'delta')[1],calc_puiss(char_O,T,1,'delta')[0]
     list_t=detec_pic(char_B,char_A,T,'ripples',fact_min,fact_max,1)[0] #liste des point où on detecte un sharpw entre 3 et 5* l'ecart-type
-    print(list_t)
+    #print(list_t)
     #Y=np.cos(T)
     signal_analytic=sp.hilbert(Y)
     phase_instantaneous=np.angle(signal_analytic)#on a bien une periodicité de la phase compris entre [-pi,pi]]
