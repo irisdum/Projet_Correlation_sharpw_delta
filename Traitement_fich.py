@@ -12,7 +12,7 @@ import scipy.signal as sp
 import scipy
 from scipy import interpolate
 from scipy.interpolate import UnivariateSpline
-time=20
+time=120
 global t0
 t0=30
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à changer selon les ordinateurs 
@@ -32,7 +32,9 @@ def open_data(char):
     line=mon_sig.read()
     sig=line.split("\n")[2:-1] #on enlève le titre et Y et le dernier caracère foire...
     mon_sig.close()
-    return [float(elem) for elem in sig]
+    l=[float(elem) for elem in sig]
+    print('taille donnees',len(l))
+    return l
 #Il faudrait récupérer le nom des electrodes
 
 def normal(char):
@@ -48,11 +50,10 @@ def trace(char,T):
     """char : path to the file
         plot the signal
         T: list containing the time"""
-    Y=open_data(char)[0:time*512]
-    #T=open_data(chemin+'BP1-BP2_Temps.txt')[0:20*512]
-    #plt.figure()
+    Y=open_data(char)[:time*512]
+    print("Y, T" ,len(Y),len(T))
     plt.xlabel("Temps en seconde")
-    plt.ylabel("En mv")
+    plt.ylabel("En mv2")
     plt.plot(T,Y)
     plt.grid()
     plt.title(char[66:-4]) #-4 delete the .txt and the 66 delete the chemin
@@ -139,7 +140,7 @@ def filtre(char,T,opt='ripples'):
     return : le signal filtré """
     
     nyq=0.5*512 #à changer en fonction de la fréquence d'échantillongage
-    Y=open_data(char)[0:time*512]
+    Y=open_data(char)[:time*512]
     #T=open_data('BP1-BP2_Temps.txt')[0:20*512]
     if opt=='ripples' : 
         low,high=120/nyq,250/nyq #on pourra toujours modifier cette bande si moyennement satisfait des résultats
@@ -166,7 +167,7 @@ def calc_puiss(char,T,h=20,opt='ripples'):
     """retourne un vecteur puissance du signal sur une portion delta et par saut de h. on compte en nombre de point"""
     
     #T=open_data('BP1-BP2_Temps.txt')[0:20*512]
-    
+    global time
     puiss=[]
     Tpuiss=[]
     #Ti=[] #contient les i pour correspondant au temps
@@ -177,7 +178,7 @@ def calc_puiss(char,T,h=20,opt='ripples'):
         delta=500 #correspond à la variation de la fenetre
         Y=filtre(char,T,opt)
     else : 
-        Y=open_data(char)[0:time*512] #cas ou on cherche la puissance sans filtre
+        Y=open_data(char)[:time*512] #cas ou on cherche la puissance sans filtre
         delta= 50 #a changer en fonction de ce qui est normalisé
     i=0
     while i<=512*time-delta:#On a pas la puissance des derniers points à voir 
@@ -186,9 +187,10 @@ def calc_puiss(char,T,h=20,opt='ripples'):
         Tpuiss+=[i/512]
         #Ti+=[i]
         i=i+h
-    print("taille t , p ",len(Tpuiss),len(Tpuiss))
+        
+    print("taille t , p ",len(Tpuiss)/512,len(Tpuiss))
     
-   
+   #print(i)
     return (puiss,Tpuiss)
 
 def aff_puiss(char,T,h=20,opt='ripples'):
@@ -196,7 +198,8 @@ def aff_puiss(char,T,h=20,opt='ripples'):
     Tpuiss=calc_puiss(char,T,h,opt)[1]
     puiss=calc_puiss(char,T,h,opt)[0]#signal non normalisé
     #puiss=normalise_puiss(char,T,h,opt)
-    
+   
+    print(len(Tpuiss),len(puiss))
     #plt.subplot(2,1,2)
 #    plt.plot(Tpuiss,puiss,c='orange')  
     if opt=='delta':
@@ -376,6 +379,7 @@ def sort_sharpw_ripples(char1,char_A,T,opt='ripples',h=20):
     
     aff_puiss(char1,T)
     
+    
     U0=detec_pic(char1,char_A,T,'ripples',3,5,h)
     #print(U0)
     plt.plot(U0[0],U0[1],'g*',label="between 3-5 std")
@@ -391,9 +395,9 @@ def sort_sharpw_ripples(char1,char_A,T,opt='ripples',h=20):
     plt.legend()
     
     
-def vect_detect_pic(char1,char_A,T,opt='ripples',fact=3,max_fact=10):
+def vect_detect_pic(char1,char_A,T,opt='ripples',fact=3,max_fact=10,h=1):
     """retourne un vecteur de 0 et et de 1 correspondant à la detection de pic. Soit 1 quand la valeur du signal correspond à un pic sharpw 0 sinon"""
-    U0=detec_pic(char1,char_A,T,opt,fact,max_fact,1)[2]
+    U0=detec_pic(char1,char_A,T,opt,fact,max_fact,h)[2]
     #print(len(T))
     print(U0)
     vect=[]#liste qui ca contenir les 0 et les 1

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+1#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Mon Nov 26 14:21:24 2018
@@ -12,7 +12,7 @@ from fastdtw import fastdtw
 from Traitement_fich import*
 
 
-time=20 #Au debut
+time=120 #Au debut
 
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à changer selon les ordinateurs
 size= time*512 #taille des listes
@@ -64,9 +64,9 @@ PO=normalise_puiss(charO,T,1,'delta')
 #fich3.close()
 ##Construction d'un vecteur de 0 et de 1 caractérisant la présence de pic delta
 ###Detection des pics delta de la même manière que l'on a détecté les sharp waves ripples
-VO=vect_detect_pic(charO,charA,T,'delta',2,100)
+VO=vect_detect_pic(charO,charA,T,'delta',2,100,20)
 #print(VO)
-VB=vect_detect_pic(charB,charA,T,'ripples',3,50)
+VB=vect_detect_pic(charB,charA,T,'ripples',3,50,20)
 #fich4=open("Vect_pic"+charO[66:-4]+".txt","w")
 #fich4.write('Detection de pic en amplitude \n')
 #fich4.write(charO[66:-4]+'\n')
@@ -127,17 +127,40 @@ for i in range(size): #il s'agit de la plus petite liste, on peut simplifier ave
     vect_picO[i,0]=T[i]
     vect_picB[i,1]=VB[i]
     vect_picO[i,1]=VO[i]
-
-distance,path=fastdtw(vect_picB ,vect_picO,radius=1, dist=euclidean) #distance en quoi ? 
+distance,path=fastdtw(vect_picB, vect_picO,radius=2, dist=euclidean) 
 #print(distance)
 index_a,index_b=zip(*path)
-plt.plot(vect_picB[:,0],vect_picB[:,1],color='blue')
-plt.plot(vect_picO[:,0],vect_picO[:,1],color='red')
-for i in index_a:
-    if (i%100)==0:
-        x1=vect_picB[i,0]
-        y1=vect_picB[i,1]
-        x2=vect_picO[i,0]
-        y2=vect_picO[i,1]
-        plt.plot([x1, x2], [y1, y2], color='k', linestyle='-', linewidth=2)
+
+plt.figure(figsize=(30,15))
+plt.title("DTW sur les courbes de detection de sharpw")
+plt.subplot(2,1,1)
+plt.plot(vect_picB[:,0],vect_picB[:,1],color='blue',label="Sharpw de "+charB[66:-4])
+plt.plot(vect_picO[:,0],vect_picO[:,1],color='red',label="Delta de "+charO[66:-4])
+plt.legend(loc=2)
+plt.grid()
+for i in range(len(index_a)):
+        # x1=vect_picB[i,0]
+        y1=vect_picB[index_a[i],1]
+        # x2=vect_picO[i,0]
+        y2=vect_picO[index_b[i],1]
+        x1=index_a[i]/512
+        x2=index_b[i]/512
+        if index_a[i]!=index_b[i]:
+            if i%10==0:
+                plt.plot([x1,x2],[y1,y2], color='k', linestyle='-', linewidth=0.5)
+plt.subplot(2,1,2)
+plt.grid()
+print(len(index_b),len(vect_picB[:,1]))
+DTW_B=[]
+DTW_O=[]
+#On change les ordonnées : 
+for i in range(len(vect_picB[:,1])):
+    DTW_B+=[vect_picB[index_a[i],1]]
+    DTW_O+=[vect_picO[index_b[i],1]]
+plt.plot(vect_picB[:,0],DTW_B,color='blue')
+plt.plot(vect_picO[:,0],DTW_O,color='red')
+plt.xlabel("T en seconde")
+#print(index_a[7600:7700])
+
+
 plt.show()
