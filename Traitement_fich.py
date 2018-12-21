@@ -12,7 +12,7 @@ import scipy.signal as sp
 import scipy
 from scipy import interpolate
 from scipy.interpolate import UnivariateSpline
-time=120
+time=300
 global t0
 t0=30
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à changer selon les ordinateurs 
@@ -188,7 +188,7 @@ def calc_puiss(char,T,h=20,opt='ripples'):
         #Ti+=[i]
         i=i+h
         
-    print("taille t , p ",len(Tpuiss)/512,len(Tpuiss))
+    #print("taille t , p ",len(Tpuiss)/512,len(Tpuiss))
     
    #print(i)
     return (puiss,Tpuiss)
@@ -215,7 +215,7 @@ def aff_puiss(char,T,h=20,opt='ripples'):
         
     plt.title("Puissance du signal "+char[66:-4])
     plt.grid()
-    plt.show()
+    
   
     
     
@@ -346,23 +346,22 @@ def detec_pic(char1,char_A,T,opt='ripples',fact=3,max_fact=10,h=20):
                         #print(pic_max)
                         list_time_max+=[Tp[l_sharpw.index(pic_max)+list_ind[-1][0]]]#l'indice du maximum de pic
                         list_max+=[pic_max]
-                        #print(list_time_max)
+                       # print(list_time_max)
                     else:
-                        #print("je suis un pic trop grand")
+                     #   print("je suis un pic trop grand")
                         del list_ripples[-1]
                 else:
                     #print("je suis un pic trop etroit")
                     del list_ripples[-1]
            
-                
     if opt =='ripples':
         #print ('we test the pic')
         #print(list_time_max)
-        
         true_val=clean_epileptic_pic(char_A,list_time_max,list_max,list_ripples[1:],T,h)
         true_peak=true_val[0]
         true_list_max=true_val[1]
         true_list_ripples=true_val[2]
+        #print("true val" ,true_val)
     else:
         #print('we are not testing because we are an A')
         true_peak=list_time_max
@@ -377,29 +376,53 @@ def sort_sharpw_ripples(char1,char_A,T,opt='ripples',h=20):
     #aff_puiss(char1,T)
     #recoltons les pics compris entre 3 et 5 fois l'ecart type
     
-    aff_puiss(char1,T)
-    
-    
-    U0=detec_pic(char1,char_A,T,'ripples',3,5,h)
-    #print(U0)
+    aff_puiss(char1,T,h,"ripples")    
+    U0=detec_pic(char1,char_A,T,'ripples',3,5,h) 
+    #print("U0",U0)
     plt.plot(U0[0],U0[1],'g*',label="between 3-5 std")
-    
+      #recoltons les pics compris entre 5 et 7 fois l'ecart type
     U1=detec_pic(char1,char_A,T,'ripples',5,7,h)
-    #print(U1)
+    #print("U1",U1)
     plt.plot(U1[0],U1[1],'b*',label="between 5-7 std")
     
-    U2=detec_pic(char1,char_A,T,'ripples',7,100,h)
-    #print(U2)
+    U2=detec_pic(char1,char_A,T,'ripples',7,200,h)
+    print("U2",U2)
     plt.plot(U2[0],U2[1],'r*',label="above 7 std")
     
     plt.legend()
+    plt.show()
     
+    
+def vect_detect_pic_STA(char1,char_A,T,opt='ripples',fact=3,max_fact=10,h=1) : 
+    """retourne un vecteur de 0 et de 1, mais 1 pour le tmax du sharpw  0 sinon et non pas des paliers comme dans la fonction vect_detec_pic"""
+        
+    U0=detec_pic(char1,char_A,T,opt,fact,max_fact,h)[0]
+    vect=[]#liste qui ca contenir les 0 et les 1
+    i=0
+    #print("taille T", len(T))   
+    if U0==[[0,0]]:
+        print('pas de pic')
+        return [0 for i in range(len(T))]   
+    for elem in T:
+        compt=0 #détecte si on a trouvé un pic
+        if i<len(U0):# qd on a pas encore détecté tous les sharpw ripples
+            for i in range(len(U0)):
+                if round(elem,5)==round(U0[i],5):#on a le max d'un pic
+                    vect+=[1]
+                    i+=1
+                    compt+=1
+                    print(i)
+            if compt==0:
+                vect+=[0]
+        else:
+            vect+=[0]
+    return vect
     
 def vect_detect_pic(char1,char_A,T,opt='ripples',fact=3,max_fact=10,h=1):
     """retourne un vecteur de 0 et et de 1 correspondant à la detection de pic. Soit 1 quand la valeur du signal correspond à un pic sharpw 0 sinon"""
     U0=detec_pic(char1,char_A,T,opt,fact,max_fact,h)[2]
     #print(len(T))
-    print(U0)
+    #print(U0)
     vect=[]#liste qui ca contenir les 0 et les 1
     i=0
     #print("taille T", len(T))   
@@ -407,7 +430,7 @@ def vect_detect_pic(char1,char_A,T,opt='ripples',fact=3,max_fact=10,h=1):
         print('pas de pic')
         return [0 for i in range(len(T))] 
     for elem in T:
-        if i<len(U0):# qd on a détecté tous les sharpw ripples
+        if i<len(U0):# qd on a pas encore détecté tous les sharpw ripples
             if  elem>=U0[i][0]:#on est dans le pic
                 if elem<round(U0[i][1],6):
                     vect+=[1]
@@ -474,6 +497,7 @@ def clean_epileptic_pic(char_A,list_sharpw,list_max,list_end_begin,T,h):
     true_max=[]
     true_begin_end=[]
     for i in range(len(list_sharpw)):
+        compt=0
         for elem in remove:
             if round(list_sharpw[i],1)==round(elem,1):
                 compt=1
@@ -484,17 +508,22 @@ def clean_epileptic_pic(char_A,list_sharpw,list_max,list_end_begin,T,h):
     #print('final max',true_max)
     return [true_sharpw,true_max,true_begin_end]
     
-
+def vect_phase(char_O,T):
+    """ Retourne un vecteur avec la phase à chaque instant t de T"""
+    Y=calc_puiss(char_O,T,1,'delta')[0]#on a choisit un pas de 1 pour la puissance
+    signal_analytic=sp.hilbert(Y)
+    return np.angle(signal_analytic)
+    
     
 def phase_delta(char_B,char_A,char_O,T,fact_min,fact_max):
     """Determinons la phase du signal delta lorsque le critère sharpw est détecté aux instants appartenant à la liste_t"""
     #On utilise la transformée de Hilbert 
-    Tpuiss,Y=calc_puiss(char_O,T,1,'delta')[1],calc_puiss(char_O,T,1,'delta')[0]
+    #Tpuiss,Y=calc_puiss(char_O,T,1,'delta')[1],calc_puiss(char_O,T,1,'delta')[0]
     list_t=detec_pic(char_B,char_A,T,'ripples',fact_min,fact_max,1)[0] #liste des point où on detecte un sharpw entre 3 et 5* l'ecart-type
     #print(list_t)
     #Y=np.cos(T)
-    signal_analytic=sp.hilbert(Y)
-    phase_instantaneous=np.angle(signal_analytic)#on a bien une periodicité de la phase compris entre [-pi,pi]]
+    #signal_analytic=sp.hilbert(Y)
+    phase_instantaneous=vect_phase(char_O,T)#on a bien une periodicité de la phase compris entre [-pi,pi]]
     phase_detec=[] #liste containing the phase of delta rythmes when a sharpw is detected
     #fig=plt.figure(figsize=(30,15))
     #ax0=fig.add_subplot(211)

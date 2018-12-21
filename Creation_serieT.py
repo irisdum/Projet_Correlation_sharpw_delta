@@ -18,9 +18,9 @@ chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à
 size= time*512 #taille des listes
 T=[round(i/512,6) for i in range(1,time*512+1)]
 
-charB=chemin+"B3-B2N3_120s.txt"
-charO=chemin+"O'9-O'8_120s.txt"
-charA=chemin+"A'2-A'1_120s.txt"
+charB=chemin+"B'2-B'1_300s.txt"
+charO=chemin+"O'9-O'8_300s.txt"
+charA=chemin+"A'2-A'1_300s.txt"
 ##Afin de pouvoir étudier les motifs sur un nouvel alogrithme, on veut avoir 
 
 #On extrait la série temporelle brut : #
@@ -127,7 +127,7 @@ for i in range(size): #il s'agit de la plus petite liste, on peut simplifier ave
     vect_picO[i,0]=T[i]
     vect_picB[i,1]=VB[i]
     vect_picO[i,1]=VO[i]
-distance,path=fastdtw(vect_picB, vect_picO,radius=2, dist=euclidean) 
+distance,path=fastdtw(vect_picB, vect_picO,radius=1, dist=euclidean) 
 #print(distance)
 index_a,index_b=zip(*path)
 

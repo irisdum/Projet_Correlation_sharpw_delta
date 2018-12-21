@@ -9,13 +9,12 @@ Created on Sun Nov  4 14:28:31 2018
 from Traitement_fich import*
 import matplotlib.pyplot as plt
 time=120
-
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à changer selon les ordinateurs
 
 #T=open_data(chemin+'BP1-BP2_Temps.txt')[0:time*512] 
 T=[round(i/512,6) for i in range(1,time*512+1)]
-char_A=chemin+"A'2-A'1_120s.txt" #a changer en fonction de la taille de l'extrait considéré
-
+char_A=chemin+"A'2-A'1_300s.txt" #a changer en fonction de la taille de l'extrait considéré
+char_B =chemin+"B'2-B'1_300s.txt"
 ##Affichons les signaux bruts
 # plt.figure()
 # plt.plot(T,open_data(chemin+"O'9-O'8_120s.txt")[:512*time])
@@ -53,7 +52,7 @@ char_A=chemin+"A'2-A'1_120s.txt" #a changer en fonction de la taille de l'extrai
 #detec_pic(chemin+"B'2-B'1N3.txt",char_A,T,'ripples',3,50,1)
 #print(detec_pic(chemin+"B3-B2N3_120s.txt",char_A,T)[0])
 #Etudions les differents type de sharpw soit trié en fonction de leur écart à la moyenne
-#sort_sharpw_ripples(chemin+"B3-B2N3_120s.txt",char_A,'ripples',1)
+#sort_sharpw_ripples(chemin+"B'2-B'1N3_120s.txt",char_A,'ripples',1)
 #sort_sharpw_ripples(chemin+"B3-B2N3.txt",char_A,T,'ripples',1)
 #aff_puiss(chemin+"O'9-O'8_120s.txt",T,20,'delta')
 ##Etudions si des sharps waves rippples coincident graphiquement avec l'apparition de delta
@@ -64,24 +63,32 @@ char_A=chemin+"A'2-A'1_120s.txt" #a changer en fonction de la taille de l'extrai
 
 #detec_epileptic_pic(chemin+ "A'2-A'1N3.txt",chemin+"B'4-B'3N3.txt",T)
 #clean_epileptic_pic(chemin+ "A'2-A'1N3.txt",chemin+"B'4-B'3N3.txt",T,1)
-#récupérons la phase du signal lorsqu'un sharpw est détecté
+#récupérons la  du signal lorsqu'un sharpw est détecté
 #phase_delta(chemin+"B'3-B'2N3.txt",char_A,chemin+"O'9-O'8N3.txt",T,3,5)
 #Determinons les valeurs des phases trouvées en fonction de l'amplitude du sharpw détectées
 #stat_phase(chemin+"B'2-B'1N3_60s.txt",char_A,chemin+"O'9-O'8N3_60s.txt",T)
 
 #Comparons les vecteurs detectiion pour delta et sharpw
-#charB=chemin+"B3-B2N3_60s.txt"
-#charO=chemin+"O'9-O'8N3_60s.txt"
-#plt.figure(figsize=(30,15))
-#VB=vect_detect_pic(charB,T,'ripples',3,15,1)
-#VO=vect_detect_pic(charO,T,'delta',2,100,1)
-#plt.legend(loc=3)
+# charB=chemin+"B'2-B'1N3_120s.txt"
+# # charO=chemin+"O'9-O'8_120s.txt"
+# # plt.figure(figsize=(30,15))
+plt.figure()
+plt.subplot(2,1,1)
+VB=vect_detect_pic(char_B,char_A,T,'ripples',3,15,1)
+plt.plot(T[:(len(VB))],VB)
+plt.subplot(2,1,2)
+plt.plot(T,vect_detect_pic_STA(char_B,char_A,T,opt='ripples',fact=3,max_fact=15,h=1))
+plt.show()
+# plt.show()
+# # VO=vect_detect_pic(charO,T,'delta',2,100,1)
+# plt.legend(loc=3)
+
 
 
 #Etablissons les statistiques : On essaie de se focaliser sur des extraits de 1 à 2 minutes
-#char_B=chemin+"B3-B2N3_120s.txt"
-#char_Bp=chemin+"B'3-B'2N3_120s.txt"
-#print("Cas de "+ char_B[66:-4])
-#statistic_sharpw(char_B,char_A,T,3,10,20)
-#print("Cas de "+ char_Bp[66:-4])
-#statistic_sharpw(char_Bp,char_A,T,3,10,20)
+# char_B=chemin+"B3-B2N3_120s.txt"
+# char_Bp=chemin+"B'3-B'2N3_120s.txt"
+# print("Cas de "+ char_B[66:-4])
+# statistic_sharpw(char_B,char_A,T,3,10,20)
+# print("Cas de "+ char_Bp[66:-4])
+# statistic_sharpw(char_Bp,char_A,T,3,10,20)
