@@ -17,7 +17,7 @@ import ast
 from sklearn.cluster import KMeans,MeanShift,estimate_bandwidth # for kdtree method
 
 #Define variable
-time=50 #in second
+time=70 #in second
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #change depending the data set
 
 T=[round(i/512,6) for i in range(1,time*512+1)] #contains time 
@@ -54,6 +54,7 @@ def plot_duree(name_sig,T):
     axs[2].set_title('Duree high')
     axs[2].plot(t_max_pic_high,D_high,'b')
     plt.show()
+    
 def crit_event(name_sig,T):
     """A partir du signal filtré et de la liste avec indice debut et fin de chaque evenement on retourne amplitude de l'evenement"""
     D_high,sig_high,sig_low,t_max_pic_high,ind=duree_event(name_sig,T)
@@ -114,9 +115,10 @@ def cluster(name_sig,T):
     D_high,sig_high,sig_low,t_max_pic_high,ind,A_high,A_low=crit_event(name_sig,T)
     Ncluster=2
 
-   
+    print(D_high,A_high,A_low)
     X=np.array([D_high,A_high,A_low])#quantitatives variable
     X=X.T # what does this line ???
+    print('X',type(X),np.size(X))
     kmeans = KMeans(n_clusters=Ncluster,n_init=200).fit(X)
     print(kmeans.cluster_centers_)
     predictions=kmeans.predict(X)
@@ -166,7 +168,15 @@ def plot_influ_crit(name_sig,T):
     #plt.ylabel("Duree de l'evenement")
     plt.show()
     
-#cluster(char_B,T)    
-plot_influ_crit(char_B,T)
+def extract_gr(name_sig,T,num_gr):
+    """returns a vector with the index of the spike we keep"""
+    predictions,D_high,A_high,A_low=cluster(name_sig,T)
+    l_spike=[]
+    for i in range(len(prediction)):
+        if prediction==num_gr:
+            l_spike+=[t_max_pic_high[i]]
+    return l_spike
+cluster(char_B,T)    
+#plot_influ_crit(char_B,T)
 #plot_ampl(char_B,T)
 #plot_duree(char_B,T)
