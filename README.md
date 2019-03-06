@@ -1,6 +1,7 @@
 # Projet_Correlation_sharpw_delta
 
-Les fichiers EEG extraits ont une frequence d'échantillonage de 512 Hz
+L'ensemble de code est utilisé afin de traiter des signaux EEG, et de déterminer l'existence ou non d'une corrélation entre rythmes Sharp waves Ripples et rythme delta. Les fichiers EEG extraits ont une frequence d'échantillonage de 512 Hz obtenu avec des macroelectrodes. 
+Attention ce code n'est pas fini. 
 
 ## Traitement_fich
 Fichier qui contient toutes les fonctions utilisées pour l'analyse des signaux.
@@ -24,6 +25,12 @@ Nous étudions la répartition de la phase en fonction de l'amplitude des sharp 
 Ce fichier est utilisé pour appliqué les fonctions de Traitement fich aux différents fichiers de notre choix. 
 ## Creation_serieT 
 Fichier qui fait appel aux fonctions de Traitement_fich afin de créer des séries temporelles qui seront analysé par DTW. (Dynamic Time Warping). Puisqu'il faut que les serie temporelles soient de même longueur, on choisit de calculer la puissance avec un pas de 1. Si il y a d'eventuel probleme lié à ce pas très faible il est envisageable de garder lun pas de 20 points pour la puissance et de faire une interpolation pour rajouter les points manquants. 
+## DTW
+Data Time Warping
+## STA 
+Spike trigerred average
+## Cluster
+Il s'agit de faire un cluster afin de trier les SPW en différentes catégories.
 
 ## Améliorations 
 
