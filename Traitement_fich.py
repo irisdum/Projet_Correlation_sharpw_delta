@@ -12,7 +12,7 @@ import scipy.signal as sp
 import scipy
 from scipy import interpolate
 from scipy.interpolate import UnivariateSpline
-time=50
+time=300
 global t0
 t0=30
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à changer selon les ordinateurs 
@@ -208,7 +208,7 @@ def calc_puiss(char,T,h=20,opt='ripples'):
     #print("taille t , p ",len(Tpuiss)/512,len(Tpuiss))
     
    #print(i)
-    return (puiss,Tpuiss)
+    return puiss,Tpuiss
 
 def aff_puiss(char,T,h=20,opt='ripples'):
     global val_fig
@@ -316,8 +316,8 @@ def detec_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=20):
     #Y1=open_data(char1)[0:time*512]
     global val_fig
     #Y=calc_puiss(char1,T,h,opt)[0]
-    Y=normalise_puiss(char1,T,h,opt) #puissance normalisée
-    Tp=calc_puiss(char1,T,h,opt)[1]
+    Y,Tp=normalise_puiss(char1,T,h,opt) #puissance normalisée
+    #Tp=calc_puiss(char1,T,h,opt)[1]
     ecart=np.std(Y)
     moy=np.mean(Y)
     #print(moy)
@@ -387,8 +387,8 @@ def detec_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=20):
     true_peak=list_time_max
     true_list_max=list_max
     true_list_ripples=list_ripples[1:]
-    # print(list_ind)
-    return (true_peak,true_list_max,true_list_ripples,inter_pic,list_ind)
+   # print('liste indice' ,len(list_ind), len(true_list_max),true_peak[0])
+    return (true_peak,true_list_max,true_list_ripples,inter_pic,list_ind[1:])
 
 def sort_sharpw_ripples(char1,T,opt='ripples',h=20):
     """Trie les pics en trois catégorie et les affiche sur le graphe des puissance"""
@@ -413,10 +413,10 @@ def sort_sharpw_ripples(char1,T,opt='ripples',h=20):
     plt.show()
     
     
-def vect_detect_pic_STA(char1,char_A,T,opt='ripples',fact=3,max_fact=10,h=1) : 
+def vect_detect_pic_STA(char1,T,opt='ripples',fact=3,max_fact=10,h=1) : 
     """retourne un vecteur de 0 et de 1, mais 1 pour le tmax du sharpw  0 sinon et non pas des paliers comme dans la fonction vect_detec_pic"""
         
-    U0=detec_pic(char1,char_A,T,opt,fact,max_fact,h)[0]
+    U0,true_list_max,true_list_ripples,inter_pic,list_ind=detec_pic(char1,T,opt,fact,max_fact,h)
     vect=[]#liste qui ca contenir les 0 et les 1
     i=0
     #print("taille T", len(T))   
@@ -438,9 +438,9 @@ def vect_detect_pic_STA(char1,char_A,T,opt='ripples',fact=3,max_fact=10,h=1) :
             vect+=[0]
     return vect
     
-def vect_detect_pic(char1,char_A,T,opt='ripples',fact=3,max_fact=10,h=1):
+def vect_detect_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=1):
     """retourne un vecteur de 0 et et de 1 correspondant à la detection de pic. Soit 1 quand la valeur du signal correspond à un pic sharpw 0 sinon"""
-    U0=detec_pic(char1,char_A,T,opt,fact,max_fact,h)[2]
+    true_peak,true_list_max,U0,inter_pic,list_ind=detec_pic(char1,T,opt,fact,max_fact,h)
     #print(len(T))
     #print(U0)
     vect=[]#liste qui ca contenir les 0 et les 1
@@ -470,7 +470,7 @@ def vect_detect_pic(char1,char_A,T,opt='ripples',fact=3,max_fact=10,h=1):
     #print("T et vect" ,len(T),len(vect))
     #plt.plot(T,vect,label="Detection sharpw signal "+char1[66:-4])
     #plt.show()    
-    return vect
+    return vect,len(U0)
     
 def detect_delta(char_delta,char_A,T,h):
     """Detecte les pics supposés caractéristique des rythmes delta du cerveau selon un critère d'amplitude"""
@@ -492,7 +492,7 @@ def detec_delta_sharp_ripples(char_delta,char_A,char_ripples,T):
 
     
     #T=calc_puiss(char_delta,T,h=20,opt='delta')[1]
-    X=detec_pic(char_ripples,char_A,T)[0]
+    X,true_list_max,true_list_ripples,inter_pic,list_ind[1:]=detec_pic(char_ripples,char_A,T)[0]
     aff_puiss(char_delta,T,h=20,opt='delta')
     #print(X)
     for elem in X:
@@ -539,7 +539,7 @@ def phase_delta(char_B,char_A,char_O,T,fact_min,fact_max):
     """Determinons la phase du signal delta lorsque le critère sharpw est détecté aux instants appartenant à la liste_t"""
     #On utilise la transformée de Hilbert 
     #Tpuiss,Y=calc_puiss(char_O,T,1,'delta')[1],calc_puiss(char_O,T,1,'delta')[0]
-    list_t=detec_pic(char_B,char_A,T,'ripples',fact_min,fact_max,1)[0] #liste des point où on detecte un sharpw entre 3 et 5* l'ecart-type
+    list_t,true_list_max,true_list_ripples,inter_pic,list_ind=detec_pic(char_B,char_A,T,'ripples',fact_min,fact_max,1) #liste des point où on detecte un sharpw entre 3 et 5* l'ecart-type
     #print(list_t)
     #Y=np.cos(T)
     #signal_analytic=sp.hilbert(Y)
@@ -595,11 +595,11 @@ def statistic_sharpw(char1,char_A,T,fact=3,max_fact=10,h=20):
     
 def normalise_puiss(char,T,h=1,opt='ripples'):
     """fonction qui prend en entrée le chemin vers le fichier et qui renvoie un vecteur correspondant à la puissance normalisée"""
-    Y=calc_puiss(char,T,h,'brut')[0] #signal puissance non filtré
+    Y,Tp=calc_puiss(char,T,h,'brut') #signal puissance non filtré
     moy=np.mean(Y)
     print(moy)
     Y2=calc_puiss(char,T,h,opt)[0] #puissance filtré sur la bande voulu
-    return [i/moy for i in Y2] #puissance normalisée
+    return [i/moy for i in Y2],Tp #puissance normalisée
     
 def convolve_spike(T,X):
     """returns a list containting the convolution with a gaussian"""

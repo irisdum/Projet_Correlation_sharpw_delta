@@ -8,7 +8,7 @@ Created on Sun Nov  4 14:28:31 2018
 
 from Traitement_fich import*
 import matplotlib.pyplot as plt
-time=20
+time=120
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à changer selon les ordinateurs
 
 #T=open_data(chemin+'BP1-BP2_Temps.txt')[0:time*512] 
