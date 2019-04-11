@@ -21,7 +21,7 @@ from scipy.spatial.distance import pdist
 #import panda #open source library for data analysis
 
 #Define variable
-time=300 #in second
+time=20 #in second
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #change depending the data set
 
 T=[round(i/512,6) for i in range(1,time*512+1)] #contains time 
@@ -331,7 +331,8 @@ def plot_all_pic_cluster(name_sig,T,nb_cluster=4):
 
 ##Pour le vecteur de 0 et de 1 : 
 vect_1=vect_detect_pic_STA(char_O,T,opt='ripples',fact=3,max_fact=10,h=1) # regarde comportement rythme delta
-print('len vec1',len(vect_1))
+
+#print('len vec1',len(vect_1))
 #print(len(vect_1),'nb pic delta')
 size=len(vect_1)
 # print("size",size)
@@ -340,36 +341,42 @@ X1=np.zeros((1,size))
 X1[0,:]=vect_1
 #X1[:,1]=vect_1
 delta=512
-liste_t=sort_sharpw_cluster(char_B,T,2,2)
+liste_t=sort_sharpw_cluster(char_B,T,4,4) #groupe 1 avec 4 cluster
+# #Donne le temps moyen séparant des SPW
+# diff=[liste_t[i+1]-liste_t[i] for i in range((len(liste_t)-1))]
+# tmoy=np.mean(diff)
+# print('Moyenne des SPW',tmoy)
+
+
 #liste_t contains tmax of sharpw detection
-p_SW=len(liste_t)/(time*512) #proba d'observer un rythme SW
-print('n_delta',sum(vect_1)/(time*512))
-Liste_val_mean,Liste_std=STA_dt_after(liste_t,X1,delta)
-#print('len val mean', np.size(Liste_std))
-#Liste_val_mean=[i for i in Liste_val_mean1]
-# #print("taille ecart-type" ,Liste_std)
-list_val_std=[i+j for i,j in zip(Liste_std,Liste_val_mean)] #std from the new values calculated
-list_val_std2=[j-i for i,j in zip(Liste_std,Liste_val_mean)]
-Liste_val_mean2=STA_dt_before(liste_t,X1,delta)[0]
-
-
-Liste_std2=STA_dt_before(liste_t,X1,delta)[1]
-# #print("taille ecart-type" ,Liste_std)
-list_val_std3=[i+j for i,j in zip(Liste_std2,Liste_val_mean2)] #std from the new values calculated
-list_val_std4=[j-i for i,j in zip(Liste_std2,Liste_val_mean2)]
-plt.figure(figsize=(15,30))
-plt.subplot(2,1,1)
-#print('plot pb', np.size(np.transpose(list_val_std),1),len([i/512 for i in range(delta)]))
-
-#plt.plot([i/512 for i in range(delta)],np.transpose(list_val_std),c='r')
-plt.plot([i/512 for i in range(delta)],np.transpose(Liste_val_mean),c='b')
-#plt.plot([i/512 for i in range(delta)],np.transpose(list_val_std2),c='r',label="std")
-plt.title("STA"+charB[66:-4]+'groupe 1/2' )
-plt.plot([i/512 for i in range(delta)],[sum(vect_1)/(time*512) for i in range(delta)])
-plt.subplot(2,1,2)
-#plt.plot([-i/512 for i in reversed(range(delta))],np.transpose(list_val_std3),c='r')
-plt.plot([-i/512 for i in reversed(range(delta))],np.transpose(Liste_val_mean2),c='b',label="mean")
-
-#plt.plot([-i/512 for i in reversed(range(delta))],np.transpose(list_val_std4),c='r',label="std")
-plt.xlabel("en secondes")
-plt.show()
+# p_SW=len(liste_t)/(time*512) #proba d'observer un rythme SW
+# print('n_delta',sum(vect_1)/(time*512))
+# Liste_val_mean,Liste_std=STA_dt_after(liste_t,X1,delta)
+# #print('len val mean', np.size(Liste_std))
+# #Liste_val_mean=[i for i in Liste_val_mean1]
+# # #print("taille ecart-type" ,Liste_std)
+# list_val_std=[i+j for i,j in zip(Liste_std,Liste_val_mean)] #std from the new values calculated
+# list_val_std2=[j-i for i,j in zip(Liste_std,Liste_val_mean)]
+# Liste_val_mean2=STA_dt_before(liste_t,X1,delta)[0]
+# 
+# 
+# Liste_std2=STA_dt_before(liste_t,X1,delta)[1]
+# # #print("taille ecart-type" ,Liste_std)
+# list_val_std3=[i+j for i,j in zip(Liste_std2,Liste_val_mean2)] #std from the new values calculated
+# list_val_std4=[j-i for i,j in zip(Liste_std2,Liste_val_mean2)]
+# plt.figure(figsize=(15,30))
+# plt.subplot(2,1,1)
+# #print('plot pb', np.size(np.transpose(list_val_std),1),len([i/512 for i in range(delta)]))
+# 
+# #plt.plot([i/512 for i in range(delta)],np.transpose(list_val_std),c='r')
+# plt.plot([i/512 for i in range(delta)],np.transpose(Liste_val_mean),c='b')
+# #plt.plot([i/512 for i in range(delta)],np.transpose(list_val_std2),c='r',label="std")
+# plt.title("STA"+charB[66:-4]+'groupe 1/2' )
+# plt.plot([i/512 for i in range(delta)],[sum(vect_1)/(time*512) for i in range(delta)])
+# plt.subplot(2,1,2)
+# #plt.plot([-i/512 for i in reversed(range(delta))],np.transpose(list_val_std3),c='r')
+# plt.plot([-i/512 for i in reversed(range(delta))],np.transpose(Liste_val_mean2),c='b',label="mean")
+# 
+# #plt.plot([-i/512 for i in reversed(range(delta))],np.transpose(list_val_std4),c='r',label="std")
+# plt.xlabel("en secondes")
+# plt.show()

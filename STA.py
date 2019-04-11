@@ -11,10 +11,10 @@ import matplotlib.pyplot as plt
 import scipy.signal as sp
 import scipy
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/'
-charB=chemin+"B'2-B'1_300s.txt"
-charO=chemin+"O'9-O'8_300s.txt"
+charB=chemin+"B'2-B'1_1800s.txt"
+charO=chemin+"O'9-O'8_1800s.txt"
 charA=chemin+"A'2-A'1_300s.txt"
-time=300
+time=20
 # Definissions un vecteur Y de 0 et de 1 contenant les moments d'apparition des pics : 
 # T=[round(i/512,6) for i in range(1,time*512+1)]
 # 
@@ -125,7 +125,7 @@ def STA_dt_after(liste_t,X,dt=128):
                 value+=[elem[i,j]]
             M_mean[i,j]=np.mean(value)
             M_std[i,j]=np.std(value)
-    return M_mean, M_std 
+    return M_mean, M_std,list_sub_matX
     
 ##STA Before sharpw results
 # #print(STA_dt(liste_t,X,256)) 
