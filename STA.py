@@ -14,7 +14,7 @@ chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/'
 charB=chemin+"B'2-B'1_1800s.txt"
 charO=chemin+"O'9-O'8_1800s.txt"
 charA=chemin+"A'2-A'1_300s.txt"
-time=20
+time=1800
 # Definissions un vecteur Y de 0 et de 1 contenant les moments d'apparition des pics : 
 # T=[round(i/512,6) for i in range(1,time*512+1)]
 # 

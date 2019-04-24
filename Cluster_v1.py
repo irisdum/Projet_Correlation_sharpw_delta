@@ -21,24 +21,26 @@ from scipy.spatial.distance import pdist
 #import panda #open source library for data analysis
 
 #Define variable
-time=20 #in second
+time=1800 #in second
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #change depending the data set
 
 T=[round(i/512,6) for i in range(1,time*512+1)] #contains time 
 char_A=chemin+"A'2-A'1_300s.txt" #a changer en fonction de la taille de l'extrait considéré
-char_B =chemin+"B'2-B'1_300s.txt"
-char_O=chemin+"O'9-O'8_300s.txt"
+char_B =chemin+"B'2-B'1_1800s.txt"
+char_O=chemin+"O'9-O'8_1800s.txt"
 
 
 
 def duree_event(name_sig,T):
     """duration of the SPW for high freq : 120-250 Hz
     low  : 10-80 Hz """
+    
     sig_high=filtre(name_sig,T,'ripples')
     sig_low=filtre(name_sig,T,'epileptic')
+
     t_max_pic_high,p_max_high,inter_pic_high,int_high,ind=detec_pic(name_sig,T,'ripples',1,70,1) #Critère detection bas
     #t_max_pic_low,p_max_low,inter_pic_low,int_low=detec_pic(name_sig,T,'epileptic',1,50,1) #Critère detection bas
-    
+    #print('inthigh, ind',len(int_high),len(ind))
     D_high=[len(elem)/512 for elem in int_high]
     return D_high,sig_high,sig_low,t_max_pic_high,ind
 
@@ -64,24 +66,31 @@ def crit_event(name_sig,T):
     D_high,sig_high,sig_low,t_max_pic_high,ind=duree_event(name_sig,T)
     A_high=[]
     A_low=[]
-    #print(ind[2][0])
+    print(ind[2][0])
     i=0
     taille_ind=len(ind)
-    while i < taille_ind : 
+    print('sighigh et D_high ind ',len(sig_high),len(D_high),ind[-1])
+    while i<taille_ind: 
         # print(ind[i])
-        if ind[i][0] != ind[i][1] : 
-            l_high=sig_high[ind[i][0]:ind[i][1]]
-            l_low=sig_low[ind[i][0]:ind[i][1]]
+        if ind[i][0]!=ind[i][1]:#normalement impossible que ce soit égaux ...
+            # print('lhigh',sig_high[ind[i][0]:ind[i][1]])
+            L_high=sig_high[ind[i][0]:ind[i][1]+1] 
+            l_high=[abs(elem) for elem in L_high]
+            # print('l_high',l_high)
+            L_low=sig_low[ind[i][0]:ind[i][1]+1]
+            l_low=[abs(elem) for elem in L_low]
+            #print('ind',ind[i][0],ind[i][1])
             A_high+=[max(l_high)-min(l_high)] 
-           # A_high+=[np.linalg.norm(l_high)]
+            #A_high+=[np.linalg.norm(l_high)]
             A_low+=[max(l_low)-min(l_low)]
+    
         else:
-            print(i)
-            # del ind[i]
-            # del D_high[i]
+           # print('suppr',i)
+            del D_high[i]
             # del t_max_pic_high[i]
-            taille_ind-=1
+            # taille_ind-=1
         i+=1
+    print(i)
     return D_high,sig_high,sig_low,t_max_pic_high,ind,A_high,A_low
     
 
@@ -258,18 +267,19 @@ def plot_all_pic_cluster(name_sig,T,nb_cluster=4):
     lcol=['blue','red','green','black']
     plt.figure(figsize=(15,30))
     for i in range(nb_cluster):
-        plt.plot(T,vect_detect_pic_STA(name_sig,T,gr=i,graph=False),lcol[i])
+        plt.figure()
+        plt.plot(T,vect_detect_pic_STA2(name_sig,T,gr=i,graph=False),lcol[i])
     plt.show()
     return False
 #cluster(char_B,T)    
 #plot_influ_crit(char_B,T)
-#plot_ampl(char_B,T)
-#plot_duree(char_B,T)
+# plot_ampl(char_B,T)
+# plot_duree(char_B,T)
 
-#asc_cluster(char_B,T,'complete',True) #ward average, complete
-#print(sort_sharpw_cluster(char_B,T,1))
-#vect_detect_pic_STA(char_B,T,1,True)
-# plot_all_pic_cluster(char_B,T,nb_cluster=4)
+#asc_cluster(char_B,T,'ward',True) #ward average, complete
+# print(sort_sharpw_cluster(char_B,T,1))
+# vect_detect_pic_STA(char_B,T,1,True)
+plot_all_pic_cluster(char_B,T,nb_cluster=3)
 
 ##Testons STA
 # 
@@ -330,18 +340,18 @@ def plot_all_pic_cluster(name_sig,T,nb_cluster=4):
 # plt.show() 
 
 ##Pour le vecteur de 0 et de 1 : 
-vect_1=vect_detect_pic_STA(char_O,T,opt='ripples',fact=3,max_fact=10,h=1) # regarde comportement rythme delta
-
-#print('len vec1',len(vect_1))
-#print(len(vect_1),'nb pic delta')
-size=len(vect_1)
-# print("size",size)
-X1=np.zeros((1,size))
-
-X1[0,:]=vect_1
-#X1[:,1]=vect_1
-delta=512
-liste_t=sort_sharpw_cluster(char_B,T,4,4) #groupe 1 avec 4 cluster
+# vect_1=vect_detect_pic_STA(char_O,T,opt='ripples',fact=3,max_fact=10,h=1) # regarde comportement rythme delta
+# 
+# #print('len vec1',len(vect_1))
+# #print(len(vect_1),'nb pic delta')
+# size=len(vect_1)
+# # print("size",size)
+# X1=np.zeros((1,size))
+# 
+# X1[0,:]=vect_1
+# #X1[:,1]=vect_1
+# delta=512
+# liste_t=sort_sharpw_cluster(char_B,T,4,4) #groupe 1 avec 4 cluster
 # #Donne le temps moyen séparant des SPW
 # diff=[liste_t[i+1]-liste_t[i] for i in range((len(liste_t)-1))]
 # tmoy=np.mean(diff)

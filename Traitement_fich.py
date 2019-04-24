@@ -11,8 +11,10 @@ import matplotlib.pyplot as plt
 import scipy.signal as sp
 import scipy
 from scipy import interpolate
+from ast import literal_eval
 from scipy.interpolate import UnivariateSpline
-time=300
+from Fast_treatment import *
+time=1800
 global t0
 t0=30
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à changer selon les ordinateurs 
@@ -33,7 +35,7 @@ def open_data(char):
     sig=line.split("\n")[2:-1] #on enlève le titre et Y et le dernier caracère foire...
     mon_sig.close()
     l=[float(elem) for elem in sig]
-    print('taille donnees',len(l))
+ #   print('taille donnees',len(l))
     return l
 #Il faudrait récupérer le nom des electrodes
 
@@ -316,7 +318,8 @@ def detec_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=20):
     #Y1=open_data(char1)[0:time*512]
     global val_fig
     #Y=calc_puiss(char1,T,h,opt)[0]
-    Y,Tp=normalise_puiss(char1,T,h,opt) #puissance normalisée
+    #Y,Tp=normalise_puiss(char1,T,h,opt) #puissance normalisée
+    Y,Tp=txt2pow(char1)
     #Tp=calc_puiss(char1,T,h,opt)[1]
     ecart=np.std(Y)
     moy=np.mean(Y)
@@ -330,7 +333,7 @@ def detec_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=20):
     list_time_max=[]#la liste retournée contient les indices des max d'amplitude des sharpw
     inter_pic=[]
     list_ripples=[[0,0]] #Initialisation
-    list_ind=[[0,0]]#contient les indices des moment ou un pic est détectée
+    list_ind=[[0,0]]#contient les indices des moments ou un pic est détectée
   
     if val_fig==1:
         plt.subplot(2,1,2)
@@ -488,9 +491,7 @@ def detect_delta(char_delta,char_A,T,h):
     
 def detec_delta_sharp_ripples(char_delta,char_A,char_ripples,T):
     """detecte sur la puissance d'un signal delta si il y a des signaux ripples
-    """
-
-    
+    """    
     #T=calc_puiss(char_delta,T,h=20,opt='delta')[1]
     X,true_list_max,true_list_ripples,inter_pic,list_ind[1:]=detec_pic(char_ripples,char_A,T)[0]
     aff_puiss(char_delta,T,h=20,opt='delta')
@@ -614,3 +615,40 @@ def convolve_spike(T,X):
     plt.plot([i/512 for i in range(len(res))],res,'green')
     plt.title('Convolution Test')
     plt.show()
+    
+# Enregistrement des pics potentiel dans un fichier txt : 
+def pic2txt(char,T,fact,max_fact,h):
+    """ prend en argument le nom du fichier calcul tous les pics SPW-Rs détecté puis les mets dans un fichier txt"""
+    true_peak,true_list_max,true_list_ripples,inter_pic,list_ind=detec_pic(char,T,'ripples',fact,max_fact,h)
+    f = open(char+"_pic.txt", "x")
+    f.write(char+"Donnees sur pic SPW ensemble pic detectes h="+str(h)+"fact min" + str(fact)+"fact max = "+ str(max_fact)+"\n")
+    for i in range(len(true_peak)):
+        f.write(str(true_peak)+';'+str(true_list_max)+';'+str(true_list_ripples)+';'+ str(inter_pic)+';'+str(list_ind)+'\n')
+    f.close()
+    
+def txt2pic(char):
+    true_peak,true_list_max,true_list_ripples,inter_pic,list_ind=[],[],[],[],[]
+    fp= open(char+"_pic.txt","r")
+    line = fp.readline() #on enlève la premnière ligne
+    line = fp.readline()
+    print(line)
+    cnt = 1
+    while line:
+        tp,tlm,tlr,ip,li=line.split(';')
+        true_peak+=[literal_eval(tp)]
+        true_list_max+=[literal_eval(tlm)]
+        true_list_ripples+=[literal_eval(tlr)]
+        inter_pic+=[literal_eval(ip)]
+        list_ind+=[literal_eval(li)]
+        line = fp.readline()
+        cnt += 1
+       
+    fp.close()
+    #print('fin de la boucle ')
+    return true_peak,true_list_max,true_list_ripples,inter_pic,list_ind   
+#Créeons pour le fichier _pic : 
+#pic2txt(chemin+"B'2-B'1_1800s.txt",T,3,10,1)
+#true_peak,true_list_max,true_list_ripples,inter_pic,list_ind=txt2pic(chemin+"B'2-B'1_1800s.txt")
+
+    
+    

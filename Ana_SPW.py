@@ -16,8 +16,9 @@ from scipy.spatial.distance import pdist
 
 #On regarde sur les deux secondes avant en faisant des intervalles de 10 ms
 delta=512
-size_inter=round(0.01*512,0)
-time=20
+# size_inter=round(0.01*512,0)
+size_inter=5
+time=1200
 # POur le cas où on regarde juste le nombre de rythme delat détecté
 T=[round(i/512,6) for i in range(1,time*512+1)]
 
@@ -27,25 +28,36 @@ def vect2inter(dt_fen,vect):
     global time
     Mat_interpic=[] #liste qui contiendra le nombre de pic delta pour chaque inter. 
     i=0
-
+    # print('vect',len(vect))
     while dt_fen*i<len(vect)-(dt_fen+1):
         Mat_interpic+=[sum(vect[int(dt_fen)*i:int(dt_fen)*i+int(dt_fen)])]
         i=i+1
-    print(len(Mat_interpic))
+    #print('Mat_interpic',len(Mat_interpic))
     return Mat_interpic
     
 def STAparInter(list_pic_delta,dt_fen,delta):
-    """liste pic_delta contient 0 lorsquil y a une activité delta détecté,delta la fenêtre du STA"""
+    """liste pic_delta contient 0 lorsqu il y a une activité delta détecté,delta la fenêtre du STA"""
     taille_i=len(list_pic_delta)
-    Mat_inter_pic=np.zeros((int(delta/dt_fen),int(delta/dt_fen)))# Matrice qui contient sur chaque ligne pour un SPW le nb de pic delta par inter
+    Mat_inter_pic=np.zeros((taille_i,int(delta/dt_fen)))# Matrice qui contient sur chaque ligne pour un SPW le nb de pic delta par inter
     Mean_inter_pic=[]
     i=0
-    for elem in list_pic_delta: #je parcours toute les sous listes extraite qui sont constitué de 0 et de 1
-        Mat_inter_pic[i,:]=vect2inter(dt_fen,elem) #j'ajoute une ligne chaque valeur correspond au nombre de pic détecté lors de l'intervalle dt_fen
+    for elem in list_pic_delta: #je parcours toute les sous listes extraites qui sont constitué de 0 et de 1
+        Mat_inter_pic[i,:]=vect2inter(dt_fen,elem[0,:]) #j'ajoute une ligne chaque valeur correspond au nombre de pic détecté lors de l'intervalle dt_fen
         i=i+1
     for j in range(Mat_inter_pic.shape[1]):
-        Mean_inter_pic+=np.mean(Mat_inter_pic[:,j])
+        Mean_inter_pic+=[np.mean(Mat_inter_pic[:,j])]
     return Mean_inter_pic
+    
+def plot_vectind_delta(liste_pic_delta,dt_fen):
+    """ Affichage du vecteur indicateur pour rythme delta pour avec une fenêtre dt après SPW"""
+    plt.figure()
+    for elem in liste_pic_delta:
+        plot_delta=vect2inter(dt_fen,elem[0,:])
+        plt.plot([i for i in range(len(plot_delta))],plot_delta)
+    plt.title('Vecteur indicateur par intervalle')
+    plt.xlabel('Numero intervalle')
+    plt.ylabel('Présence de pic')
+    plt.show()
     
 ## Test
 
@@ -63,10 +75,17 @@ X1[0,:]=vect_1
 delta=512
 liste_t=sort_sharpw_cluster(char_B,T,4,4) #groupe 1 avec 4 cluster
 
+#Affichons pour chaque SPW-Rs détecté le comportement du vecteur indicateur delta
+
+
+# Affichons pour chaque SPW-Rs détecté, le comportement du vecteur indicateur delta passé par la fonction vect2inter ( en réduisant par intervalle)
 
 Liste_val_mean,Liste_std,Liste_pic_delta=STA_dt_after(liste_t,X1,delta)
 
-Inter=STAparInter(Liste_val_mean,size_inter,delta)
-plt.plot([i for i in range(len(Inter))], Inter)
-plt.show()
-    
+plot_vectind_delta(Liste_pic_delta,size_inter)
+
+
+# print(len(Liste_pic_delta))
+# Inter=STAparInter(Liste_pic_delta,size_inter,delta)
+# plt.plot([i for i in range(len(Inter))], Inter)
+# plt.show()
