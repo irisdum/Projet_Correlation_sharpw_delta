@@ -7,15 +7,16 @@ Created on Sun Nov  4 14:28:31 2018
 """
 
 from Traitement_fich import*
+from Fast_treatment import*
 import matplotlib.pyplot as plt
-time=1200
+time=1800
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à changer selon les ordinateurs
 
 #T=open_data(chemin+'BP1-BP2_Temps.txt')[0:time*512] 
 T=[round(i/512,6) for i in range(1,time*512+1)]
 char_A=chemin+"A'2-A'1_300s.txt" #a changer en fonction de la taille de l'extrait considéré
-char_B =chemin+"B'2-B'1_300s.txt"
-char_O=chemin+"O'9-O'8_300s.txt"
+char_B =chemin+"B'2-B'1_1800s.txt"
+char_O=chemin+"O'9-O'8_1800s.txt"
 ##Affichons les signaux bruts
 # plt.figure()
 # plt.plot(T,open_data(chemin+"O'9-O'8_120s.txt")[:512*time])
@@ -23,7 +24,7 @@ char_O=chemin+"O'9-O'8_300s.txt"
 
 ##Affichons les signaux filtrés avec signal brut
 
-plt.figure(figsize=(15,30))
+#plt.figure(figsize=(15,30))
 # plt.subplot(2,1,1)
 # plt.plot(T,open_data(char_O)[:512*time])
 # plt.title('signal brut')
@@ -33,12 +34,12 @@ plt.figure(figsize=(15,30))
 # plt.show()
 
 ## Affichons puissance et filtre
-plt.figure(figsize=(15,30))
-plt.subplot(2,1,1)
-plot_filtre(char_B,T,opt='ripples')
-#plt.subplot(2,1,2)
-aff_puiss(char_B,T,1,'ripples')
-plt.show()
+# plt.figure(figsize=(15,30))
+# plt.subplot(2,1,1)
+# plot_filtre(char_B,T,opt='ripples')
+# plt.subplot(2,1,2)
+# aff_puiss(char_O,T,1,'ripples')
+# plt.show()
 
 ##Affichons les corrélations entre deux signaux : 
 #nom1="B3-B2N3.txt"
@@ -133,3 +134,15 @@ plt.show()
 # plt.xlabel("Temps en seconde")
 # plt.legend(loc=3)
 # plt.show()  
+
+## Verifions STA critère bas des rythmes delta
+
+#STApic2txt(char_O,T,'ripples',1,50,1)
+# vectpic=txt2STApic(char_O)
+# puiss,Tp=txt2pow(char_O)
+# plt.figure(figsize=(15,30))
+# plt.subplot(2,1,1)
+# plt.plot([i/512 for i in range(len(vectpic))], vectpic)
+# plt.subplot(2,1,2)
+# plt.plot(Tp,puiss)
+# plt.show()

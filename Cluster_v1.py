@@ -37,9 +37,9 @@ def duree_event(name_sig,T):
     
     sig_high=filtre(name_sig,T,'ripples')
     sig_low=filtre(name_sig,T,'epileptic')
-
-    t_max_pic_high,p_max_high,inter_pic_high,int_high,ind=detec_pic(name_sig,T,'ripples',1,70,1) #Critère detection bas
-    #t_max_pic_low,p_max_low,inter_pic_low,int_low=detec_pic(name_sig,T,'epileptic',1,50,1) #Critère detection bas
+   # t_max_pic_high,p_max_high,inter_pic_high,int_high,ind=txt2pic(name_sig) #Critère detection bas
+    # t_max_pic_low,p_max_low,inter_pic_low,int_low=detec_pic(name_sig,T,'ripples',1,50,1) #Critère detection bas
+    t_max_pic_high,p_max_high,inter_pic_high,int_high,ind=detec_pic(name_sig,T,'ripples',1,50,1) #Critère detection bas
     #print('inthigh, ind',len(int_high),len(ind))
     D_high=[len(elem)/512 for elem in int_high]
     return D_high,sig_high,sig_low,t_max_pic_high,ind
@@ -66,23 +66,23 @@ def crit_event(name_sig,T):
     D_high,sig_high,sig_low,t_max_pic_high,ind=duree_event(name_sig,T)
     A_high=[]
     A_low=[]
-    print(ind[2][0])
+    #print(ind[2][0])
     i=0
     taille_ind=len(ind)
-    print('sighigh et D_high ind ',len(sig_high),len(D_high),ind[-1])
+   # print('sighigh et D_high ind ',len(sig_high),len(D_high),ind[-1])
     while i<taille_ind: 
         # print(ind[i])
         if ind[i][0]!=ind[i][1]:#normalement impossible que ce soit égaux ...
             # print('lhigh',sig_high[ind[i][0]:ind[i][1]])
             L_high=sig_high[ind[i][0]:ind[i][1]+1] 
-            l_high=[abs(elem) for elem in L_high]
+         
             # print('l_high',l_high)
             L_low=sig_low[ind[i][0]:ind[i][1]+1]
-            l_low=[abs(elem) for elem in L_low]
+            
             #print('ind',ind[i][0],ind[i][1])
-            A_high+=[max(l_high)-min(l_high)] 
+            A_high+=[max(L_high)-min(L_high)] 
             #A_high+=[np.linalg.norm(l_high)]
-            A_low+=[max(l_low)-min(l_low)]
+            A_low+=[max(L_low)-min(L_low)]
     
         else:
            # print('suppr',i)
@@ -90,7 +90,7 @@ def crit_event(name_sig,T):
             # del t_max_pic_high[i]
             # taille_ind-=1
         i+=1
-    print(i)
+    #print(i)
     return D_high,sig_high,sig_low,t_max_pic_high,ind,A_high,A_low
     
 
@@ -126,14 +126,14 @@ def plot_ampl(name_sig,T):
 def cluster(name_sig,T):
 
     D_high,sig_high,sig_low,t_max_pic_high,ind,A_high,A_low=crit_event(name_sig,T)
-    Ncluster=4
+    Ncluster=2
 
-    print(len(D_high),len(A_high),len(A_low))
+    #print(len(D_high),len(A_high),len(A_low))
     X=np.array([D_high,A_high,A_low])#quantitatives variable
     X=X.T # what does this line ???
-    print('X',type(X),np.size(X))
+    #print('X',type(X),np.size(X))
     kmeans = KMeans(n_clusters=Ncluster,n_init=200).fit(X)
-    print(kmeans.cluster_centers_)
+    #print(kmeans.cluster_centers_)
     predictions=kmeans.predict(X)
     fig, axs = plt.subplots(3, 1)
     fig.canvas.set_window_title("Cluster"+name_sig[66:-4])
@@ -190,12 +190,13 @@ def extract_gr(name_sig,T,num_gr):
             l_spike+=[t_max_pic_high[i]]
     return l_spike
     
-def asc_cluster(name_sig,T,method='ward',disp=True,nb_br=4):
+def asc_cluster(name_sig,T,method='ward',disp=True,nb_gr=2):
     """ Applique une méthode ascendante nos données"""
-    nb_gr=4 #we choose two groups
+    #nb_gr=4 #we choose two groups
     D_high,sig_high,sig_low,t_max_pic_high,ind,A_high,A_low=crit_event(name_sig,T)
     #print(t_max_pic_high)
     X=np.array([D_high,A_high,A_low])#quantitatives variable
+    # X=np.array([D_high,A_high])
     X=X.T
     #print(np.size(X))
     Z = linkage(X, method)
@@ -205,15 +206,15 @@ def asc_cluster(name_sig,T,method='ward',disp=True,nb_br=4):
     cluster=fcluster(Z,nb_gr,criterion='maxclust')
     dist=maxdists(Z)
     if disp:
-        
-        plt.scatter(X[:,1],X[:,2])
-        plt.show()
+        # 
+        # plt.scatter(X[:,1],X[:,2])
+        # plt.show()
         fig = plt.figure(figsize=(25, 10))
         dn = dendrogram(Z)
         plt.show()
         plt.figure(figsize=(10, 8))
-        inconsistence=inconsistent(Z)
-        bool=is_valid_linkage(Z)
+        # inconsistence=inconsistent(Z)
+        # bool=is_valid_linkage(Z)
     
         plt.scatter(X[:,0], X[:,1], c=cluster)  # plot points with cluster dependent colors
         plt.title('A-highen fonction de D_high')
@@ -223,10 +224,36 @@ def asc_cluster(name_sig,T,method='ward',disp=True,nb_br=4):
         plt.title('A_low en fonction de A_high')
         plt.show()
     
-    return cluster,t_max_pic_high,ind
+    return cluster,t_max_pic_high,ind,A_high,A_low,D_high
+    
+def plot_influ_crit_asccluster(name_sig,T,method='ward',disp=True,nb_br=4):
+    pred,t_max_pic_high,ind,A_high,A_low,D_high=asc_cluster(name_sig,T,method='ward',disp=True,nb_br=4)
+    #print('cluster',len(cluster),cluster[0])
+    plt.figure()
+    col=['r.','b.','g.','r.']
+    fig, axs = plt.subplots(1, 3)
+    fig.canvas.set_window_title("Cluster_influence_crit"+name_sig[66:-4])
+    fig.suptitle('Influence criteres classification', fontsize=16)
+    #print(len(D),len(pred))
+    
+    for i in range(len(pred)):
+        axs[0].plot(pred[i],D_high[i],col[pred[i]])
+        axs[1].plot(pred[i],A_high[i],col[pred[i]])
+        axs[2].plot(pred[i],A_low[i],col[pred[i]])
+   
+    axs[0].set_xlabel("Groupe")
+    axs[0].set_title("Duree 120-250 Hz")
+    axs[1].set_xlabel("Groupe")
+    axs[1].set_title("Amplitude 120-250 Hz")
+    axs[2].set_xlabel("Groupe")
+    axs[2].set_title("Amplitude 10-80 Hz")
+    #plt.ylabel("Duree de l'evenement")
+    plt.show()
+    
+
     
 def sort_sharpw_cluster(name_sig,T,gr,nb_gr=4):
-    cluster,t_max_pic_high,ind=asc_cluster(name_sig,T,'complete',False,nb_gr)
+    cluster,t_max_pic_high,ind,A_high,A_low,D_high=asc_cluster(name_sig,T,'average',False,nb_gr)
     t_max_gr=[]
     for i in range(len(t_max_pic_high)) : 
         if cluster[i]==gr:
@@ -263,30 +290,29 @@ def vect_detect_pic_STA2(name_sig,T,gr=1,graph=True) :
         plt.show()
     return vect
 
-def plot_all_pic_cluster(name_sig,T,nb_cluster=4):
+def plot_all_pic_cluster(name_sig,T,nb_cluster=2):
     lcol=['blue','red','green','black']
     plt.figure(figsize=(15,30))
     for i in range(nb_cluster):
-        plt.figure()
         plt.plot(T,vect_detect_pic_STA2(name_sig,T,gr=i,graph=False),lcol[i])
     plt.show()
     return False
 #cluster(char_B,T)    
 #plot_influ_crit(char_B,T)
-# plot_ampl(char_B,T)
+#plot_ampl(char_B,T)
 # plot_duree(char_B,T)
-
+#plot_influ_crit_asccluster(char_B,T,'ward',True)
 #asc_cluster(char_B,T,'ward',True) #ward average, complete
 # print(sort_sharpw_cluster(char_B,T,1))
 # vect_detect_pic_STA(char_B,T,1,True)
-plot_all_pic_cluster(char_B,T,nb_cluster=3)
+#plot_all_pic_cluster(char_B,T,nb_cluster=2)
 
 ##Testons STA
 # 
 # # 
 # # Matrice X qui contient phase des rythmes delta ainsi que leur puissance dans le delta temps  précédant l'apparition du pic
 # #puiss=normalise_puiss(charO,T,1,'delta')
-# puiss=calc_puiss(char_O,T,1,'delta')[0]
+# puiss=txt2pow(char_O)
 # size=len(puiss)
 # liste_t=sort_sharpw_cluster(char_B,T,1,2)
 # #vect_1=vect_detect_pic(charO,charA,T,opt='ripples',fact=2,max_fact=10,h=1)
@@ -340,18 +366,19 @@ plot_all_pic_cluster(char_B,T,nb_cluster=3)
 # plt.show() 
 
 ##Pour le vecteur de 0 et de 1 : 
-# vect_1=vect_detect_pic_STA(char_O,T,opt='ripples',fact=3,max_fact=10,h=1) # regarde comportement rythme delta
-# 
+#vect_1=vect_detect_pic_STA(char_O,T,opt='delta',fact=3,max_fact=10,h=1) #
+ #regarde comportement rythme delta
+# vect_1=txt2STApic(char_O) #opt=delta, fact=1,maxfact=50
 # #print('len vec1',len(vect_1))
-# #print(len(vect_1),'nb pic delta')
+#print(len(vect_1),'nb pic delta')
 # size=len(vect_1)
 # # print("size",size)
 # X1=np.zeros((1,size))
-# 
+
 # X1[0,:]=vect_1
-# #X1[:,1]=vect_1
-# delta=512
-# liste_t=sort_sharpw_cluster(char_B,T,4,4) #groupe 1 avec 4 cluster
+#X1[:,1]=vect_1
+# delta=512 #On choisit d'observer le comportement moyen 1 seconde avant/après
+# liste_t=sort_sharpw_cluster(char_B,T,1,2) #groupe 1 avec 2 cluster
 # #Donne le temps moyen séparant des SPW
 # diff=[liste_t[i+1]-liste_t[i] for i in range((len(liste_t)-1))]
 # tmoy=np.mean(diff)
@@ -361,7 +388,7 @@ plot_all_pic_cluster(char_B,T,nb_cluster=3)
 #liste_t contains tmax of sharpw detection
 # p_SW=len(liste_t)/(time*512) #proba d'observer un rythme SW
 # print('n_delta',sum(vect_1)/(time*512))
-# Liste_val_mean,Liste_std=STA_dt_after(liste_t,X1,delta)
+#Liste_val_mean,Liste_std,liste_subX=STA_dt_after(liste_t,X1,delta)
 # #print('len val mean', np.size(Liste_std))
 # #Liste_val_mean=[i for i in Liste_val_mean1]
 # # #print("taille ecart-type" ,Liste_std)
@@ -370,13 +397,13 @@ plot_all_pic_cluster(char_B,T,nb_cluster=3)
 # Liste_val_mean2=STA_dt_before(liste_t,X1,delta)[0]
 # 
 # 
-# Liste_std2=STA_dt_before(liste_t,X1,delta)[1]
+# Liste_vale_mean2,Liste_std2=STA_dt_before(liste_t,X1,delta)[1] #Avant le SPW
 # # #print("taille ecart-type" ,Liste_std)
 # list_val_std3=[i+j for i,j in zip(Liste_std2,Liste_val_mean2)] #std from the new values calculated
 # list_val_std4=[j-i for i,j in zip(Liste_std2,Liste_val_mean2)]
 # plt.figure(figsize=(15,30))
 # plt.subplot(2,1,1)
-# #print('plot pb', np.size(np.transpose(list_val_std),1),len([i/512 for i in range(delta)]))
+#print('plot pb', np.size(np.transpose(list_val_std),1),len([i/512 for i in range(delta)]))
 # 
 # #plt.plot([i/512 for i in range(delta)],np.transpose(list_val_std),c='r')
 # plt.plot([i/512 for i in range(delta)],np.transpose(Liste_val_mean),c='b')

@@ -52,8 +52,10 @@ def trace(char,T):
     """char : path to the file
         plot the signal
         T: list containing the time"""
+    global time
     Y=open_data(char)[:time*512]
-    print("Y, T" ,len(Y),len(T))
+    #print(" taille Y, T" ,len(Y),len(T))
+    plt.figure(figsize=(30,10))
     plt.xlabel("Temps en seconde")
     plt.ylabel("En mv2")
     plt.plot(T,Y)
@@ -187,12 +189,10 @@ def calc_puiss(char,T,h=20,opt='ripples'):
     Tpuiss=[]
     #Ti=[] #contient les i pour correspondant au temps
     Y=filtre(char,T,opt)
-    if opt=='ripples':
-        
+    if opt=='ripples':        
         delta=100
     if opt=='epileptic':
         delta=50
-        
     elif opt =='delta':
         delta=500 #correspond à la variation de la fenetre
         Y=filtre(char,T,opt)
@@ -217,8 +217,8 @@ def aff_puiss(char,T,h=20,opt='ripples'):
     Tpuiss=calc_puiss(char,T,h,opt)[1]
     puiss=calc_puiss(char,T,h,opt)[0]#signal non normalisé
     #puiss=normalise_puiss(char,T,h,opt)
-   
-    print(len(Tpuiss),len(puiss))
+    plt.figure(figsize=(30,10))
+    #print(len(Tpuiss),len(puiss))
     #plt.subplot(2,1,2)
     #plt.plot(Tpuiss,puiss,c='orange')  
     if opt=='delta':
@@ -227,13 +227,10 @@ def aff_puiss(char,T,h=20,opt='ripples'):
     else:
 #        plt.subplot(2,1,2)
         plt.plot(Tpuiss,puiss,c='blue')
-#    if val_fig==1: # à commenter lorsqu'on est pas dans le cadre de la fonction detec_delta_sharp_ripples
-#        
-#        plt.xlabel("Temps en secondes")
- 
-        
+         
     plt.title("Puissance du signal "+char[66:-4])
-    #plt.show()
+    plt.xlabel("Temps en secondes")
+    plt.show()
     plt.grid()
     
   
@@ -320,6 +317,8 @@ def detec_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=20):
     #Y=calc_puiss(char1,T,h,opt)[0]
     #Y,Tp=normalise_puiss(char1,T,h,opt) #puissance normalisée
     Y,Tp=txt2pow(char1)
+    Y=Y[:time*512-1]
+    Tp=Tp[:time*512-1]
     #Tp=calc_puiss(char1,T,h,opt)[1]
     ecart=np.std(Y)
     moy=np.mean(Y)
@@ -383,15 +382,15 @@ def detec_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=20):
                         del list_ripples[-1]
                         del list_ind[-1]
                 else:
-                    print("je suis un pic trop etroit",i/512)
+                    #print("je suis un pic trop etroit",i/512)
                     del list_ripples[-1]
                     del list_ind[-1]
-    
+   # print('fin de for')
     true_peak=list_time_max
     true_list_max=list_max
     true_list_ripples=list_ripples[1:]
    # print('liste indice' ,len(list_ind), len(true_list_max),true_peak[0])
-    return (true_peak,true_list_max,true_list_ripples,inter_pic,list_ind[1:])
+    return true_peak,true_list_max,true_list_ripples,inter_pic,list_ind[1:]
 
 def sort_sharpw_ripples(char1,T,opt='ripples',h=20):
     """Trie les pics en trois catégorie et les affiche sur le graphe des puissance"""
@@ -401,7 +400,7 @@ def sort_sharpw_ripples(char1,T,opt='ripples',h=20):
     
     aff_puiss(char1,T,h,opt)    
     U0=detec_pic(char1,T,'ripples',1,50,h) 
-    print("U0",U0[1])
+   # print("U0",U0[1])
     plt.plot(U0[0],U0[1],'g*',label="between 3-5 std")
       #recoltons les pics compris entre 5 et 7 fois l'ecart type
     #U1=detec_pic(char1,T,'ripples',5,7,h)
@@ -426,19 +425,27 @@ def vect_detect_pic_STA(char1,T,opt='ripples',fact=3,max_fact=10,h=1) :
     if U0==[[0,0]]:
         #print('pas de pic')
         return [0 for i in range(len(T))]   
-    for elem in T:
-        compt=0 #détecte si on a trouvé un pic
-        if i<len(U0):# qd on a pas encore détecté tous les sharpw ripples
-            for i in range(len(U0)):
-                if round(elem,5)==round(U0[i],5):#on a le max d'un pic
-                    vect+=[1]
-                    i+=1
-                    compt+=1
-                    #print(i)
-            if compt==0:
-                vect+=[0]
-        else:
-            vect+=[0]
+        
+    vect=[0 for i in range(len(T))]
+    for elem in U0:
+       # print('pic delta',elem) 
+        vect[int(round(elem*512,0))]=1 #attention marche uniquement pour h=1
+      
+        #transforme le moment où un pic est détecté par 1
+    # for elem in T:
+    #     compt=0 #détecte si on a trouvé un pic
+    #     if i<len(U0):# qd on a pas encore détecté tous les sharpw ripples
+    #         for i in range(len(U0)):
+    #             if round(elem,5)==round(U0[i],5):#on a le max d'un pic
+    #                 vect+=[1]
+    #                 i+=1
+    #                 compt+=1
+    #                 #print(i)
+    #         if compt==0:
+    #             vect+=[0]
+    #     else:
+    #         vect+=[0]
+
     return vect
     
 def vect_detect_pic(char1,T,opt='ripples',fact=3,max_fact=10,h=1):
@@ -631,7 +638,7 @@ def txt2pic(char):
     fp= open(char+"_pic.txt","r")
     line = fp.readline() #on enlève la premnière ligne
     line = fp.readline()
-    print(line)
+    #print(line)
     cnt = 1
     while line:
         tp,tlm,tlr,ip,li=line.split(';')
@@ -647,8 +654,35 @@ def txt2pic(char):
     #print('fin de la boucle ')
     return true_peak,true_list_max,true_list_ripples,inter_pic,list_ind   
 #Créeons pour le fichier _pic : 
-#pic2txt(chemin+"B'2-B'1_1800s.txt",T,3,10,1)
+#pic2txt(chemin+"B'2-B'1_1800s.txt",T,1,70,1)
 #true_peak,true_list_max,true_list_ripples,inter_pic,list_ind=txt2pic(chemin+"B'2-B'1_1800s.txt")
 
-    
-    
+
+def STApic2txt(char1,T,opt,fact,max_fact,h): 
+    vect=vect_detect_pic_STA(char1,T,opt,fact,max_fact,h)
+    f = open(char1+"_pic.txt", "x")
+    f.write(char1+" Pic pour delta pour STA et h= "+ str(h)+"fact min" + str(fact)+"fact max = "+ str(max_fact)+"\n")
+    for i in range(len(vect)):
+        f.write(str(vect[i])+'\n')
+    f.close()
+
+def txt2STApic(char):
+    vect=[]
+    fp= open(char+"_pic.txt","r")
+    line = fp.readline() #on enlève la premnière ligne
+    line = fp.readline()
+    cnt = 1
+    while line:
+        vect+=[float(line)]
+        line = fp.readline()
+        cnt += 1
+        # print(line)
+        # print(cnt)
+    fp.close()
+    #print('fin de la boucle ')
+    return vect
+
+# STApic2txt(char_O,T,'delta',1,50,1)
+# vectpic=txt2STApic(charO)
+# plt.plot([i/512 for i in range(len(vectpic))], vectpic)
+# plt.show()

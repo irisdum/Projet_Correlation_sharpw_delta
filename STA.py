@@ -69,11 +69,8 @@ def STA_dt_before(liste_t,X,dt=128):
     X: Array containing the signals to study one row= one signal
     delta : size of the window we study the beahviour of the siganls X before a sharpw is detected"""
     n=len(liste_t) #nber of spike
-    print("nb de pic", n)
+    print("nb de pic SPW", n)
     size_x=X.shape[0] #comment when X size 1
-    #size_y=X.shape[1]
-    #size_x=1
-    #size_y=len(X)
     
     list_sub_matX=[]
     M_mean=np.zeros((size_x,dt)) #contains the value of the average xj for param i
@@ -95,7 +92,7 @@ def STA_dt_before(liste_t,X,dt=128):
             M_mean[i,j]=np.mean(value)
 
             M_std[i,j]=np.std(value)
-    return M_mean, M_std 
+    return M_mean, M_std,list_sub_matX
             
 def STA_dt_after(liste_t,X,dt=128):
     """Spike triggered average
@@ -104,7 +101,7 @@ def STA_dt_after(liste_t,X,dt=128):
     X: Array containing the signals to study one row= one signal
     delta : size of the window we study the beahviour of the siganls X after a sharpw is detected"""
     n=len(liste_t) #nber of spike
-    print("nb de pic", n)
+    print("nb de pic SPW", n)
     size_x=X.shape[0]
     list_sub_matX=[]
     M_mean=np.zeros((size_x,dt)) #contains the value of the average xj for param i
@@ -126,6 +123,8 @@ def STA_dt_after(liste_t,X,dt=128):
             M_mean[i,j]=np.mean(value)
             M_std[i,j]=np.std(value)
     return M_mean, M_std,list_sub_matX
+    
+
     
 ##STA Before sharpw results
 # #print(STA_dt(liste_t,X,256)) 
