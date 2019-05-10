@@ -154,8 +154,8 @@ def filtre(char,T,opt='ripples'):
         
     if opt=='epileptic':
         low,high=10/nyq,80/nyq 
-    else: 
-        return Y
+    # else: 
+    #     return Y
         
     b,a = sp.butter(2,[low,high],btype="bandpass")
     #print(len(data))
@@ -176,7 +176,9 @@ def filtre(char,T,opt='ripples'):
     return filtered
 def plot_filtre(char,T,opt='ripples'):
     Y=filtre(char,T,opt)
-    plt.plot(T,Y,color='red')
+    plt.figure(figsize=(30,15))
+    plt.plot(T[0:20*512],Y[0:20*512],color='red')
+    plt.show()
     # plt.xlabel("temps en seconde")
     # plt.title("Filtrage pour "+ opt)  
 

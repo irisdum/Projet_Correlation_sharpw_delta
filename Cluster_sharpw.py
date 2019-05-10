@@ -14,7 +14,7 @@ import ast
 from sklearn.cluster import KMeans,MeanShift,estimate_bandwidth # for kdtree method
 
 #Define variable
-time=50 #in second
+time=1800 #in second
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/' #à changer selon les ordinateurs
 
 T=[round(i/512,6) for i in range(1,time*512+1)] #contains time 
