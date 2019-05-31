@@ -3,7 +3,9 @@
 #les imports
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 from Traitement_fich import *
+
 
 time=1800
 T=[round(i/512,6) for i in range(1,time*512+1)]
@@ -18,7 +20,7 @@ from scipy.fftpack import fft
 # Critère 1 : l'amplitude
 
 def crit_clust(name_sig,T):
-    """ Donne l'amplitude des SPW-Rs dans le signal filtré des pics détecté dans detec pic ainsi que la puissance de ces pics, le nombre d'oscillation supérieur à 50% de l'amplitude max ainsi que la fréquence lié au pic de maximum amplitude"""
+    """ Donne l'amplitude des SPW-Rs dans le signal filtré des pics détectés dans detec pic ainsi que la puissance de ces pics, le nombre d'oscillation supérieur à 50% de l'amplitude max ainsi que la fréquence lié au pic de maximum amplitude"""
     sig_high=filtre(name_sig,T,'ripples')
     t_max_pic_high,p_max_high,inter_pic_high,int_high,ind=detec_pic(name_sig,T,'ripples',1,50,1)
     A_high=[]
@@ -118,8 +120,10 @@ def analyse_crit(name_sig,T):
     figure = plt.figure(name_sig[66:-4],figsize = (30, 30))
     plt.gcf().subplots_adjust(left = 0.1, bottom = 0.1,
                         right = 0.9, top = 0.85, wspace = 0, hspace = 0.3)
+    data_arr=np.array([p_max_high,A_high,nb_oscill,freq]).transpose()
+    df=pd.DataFrame(data_arr,index=[i for i in range(len(t_max_pic_high))],columns=['puissance','amplitude','nombre oscillations','frequence'])
     
-    print('On detecte'+ str(len(t_max_pic_high))+ ' pics')
+    #print('On detecte'+ str(len(t_max_pic_high))+ ' pics')
     axes = figure.add_subplot(2, 2, 1)
     #axes.set_xlabel('Temps en seconde')
     axes.set_ylabel('puissance')
@@ -144,7 +148,11 @@ def analyse_crit(name_sig,T):
     axes.set_title('Fréquence')
     #print(len(freq))
     axes.boxplot(freq)
-
     plt.show()
+    #print(df.head(20))
+    print(df.describe())
 
-analyse_crit(char_B,T)
+    pd.plotting.scatter_matrix(df,figsize=(30,30))
+    plt.show()
+    
+#analyse_crit(char_B,T)
