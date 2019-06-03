@@ -121,6 +121,7 @@ def repartition(L):
     vals=np.sort(val)
     value=vals[1] #deuxième plus petit element
     index_value=np.where(val==value)[0][0] # l'indice du deuxième plus petit
+    print('valp triés',vals)
     vecteur=vect[index_value,:]
     return value,vecteur
 
@@ -129,6 +130,9 @@ def plot_vect(vecteur):
     plt.figure()
     plt.boxplot(vecteur)
     plt.title('Répartition des valeurs dans le vecteur')
+    plt.figure()
+    plt.title('Répartition des valeurs dans le vecteur')
+    plt.hist(vecteur)
     print('Moyenne',np.mean(vecteur))
     print('Mediane',np.median(vecteur))
     plt.show()
@@ -170,6 +174,13 @@ def draw_scatter(nodes,dim1=0,dim2=1):
     plt.figure(figsize=(15,30))
     plt.scatter(list_nodex,list_nodey)
     plt.show()
+
+def draw_point(mat_point,dim1=0,dim2=1):
+    """Trace tous nos points sur la plan dim1, dim2"""
+    plt.figure(figsize=(15,30))
+    plt.scatter(mat_point[:,dim1],mat_point[:,dim2],alpha=0.2)
+    plt.show()
+    return True
     
 def draw_scatter_groupe(nodes,vect_ind,col,dim1=0,dim2=1):
     """ Connaissant l'indice des points intéressant on les trace avec la couleur col """
@@ -204,12 +215,13 @@ def draw_edges3D(ax,node_1,node_2,dim1=0,dim2=1,dim3=2,alpha=0.5):
     lz=[node_1.weight[0][dim3],node_2.weight[0][dim3]]
     ax.plot3D(lx,ly,lz,color='black',alpha=alpha)
     
-def plot_repartition(graph,alpha,dim1,dim2,vectindA,vectindB):
+def plot_repartition(graph,alpha,dim1,dim2,vectindA,vectindB,max_nodes,epochs):
     plt.figure(figsize=(15,30))
     for node_1, node_2 in graph.edges:
         draw_edges(node_1,node_2,dim1,dim2,alpha=0.5)
     draw_scatter_groupe(graph.nodes,vectindA,'red',dim1,dim2)
     draw_scatter_groupe(graph.nodes,vectindB,'blue',dim1,dim2)
+    plt.title("Repartition des points ")
     plt.show()
     
 def plot3D_repartition(graph,alpha,dim1,dim2,dim3,vectindA,vectindB):
@@ -247,7 +259,7 @@ def analyse_groupe(graph,vectindA,vectindB,tmax):
         # ib+=1
     df=pd.DataFrame(data,index=[i for i in range(len(vectindA)+len(vectindB))],columns=['nb_oscill','freq','p_max_high','A_high','classe'])
     print(df.describe(include='all'))
-    print(df.loc[df['classe']==2,:])
+    print(df.loc[df['classe']==2,:].describe())
     print(df.loc[df['classe']==1,:].describe())
     return df
     
@@ -293,22 +305,28 @@ time=1800
 T=[round(i/512,6) for i in range(1,time*512+1)]
 chemin ='/Users/iris/Desktop/Projet_Rech/Exemple/EEG_58_Sig/Donnes_signaux/'
 char_B =chemin+"B'2-B'1_1800s.txt"
-
+max_nodes=200
+epochs=400
 t_max_pic_high,p_max_high,inter_pic_high,int_high,ind,A_high,sig_high,nb_oscill,freq=crit_clust(char_B,T)
-
+print('Nombre de pics détectés',len(t_max_pic_high))
 data=np.array([nb_oscill,freq,p_max_high,A_high]).transpose()
-neural_gas = algorithms.competitive.growing_neural_gas.GrowingNeuralGas(n_inputs=4,shuffle_data=True,verbose=True, max_edge_age=10, n_iter_before_neuron_added=50,max_nodes=100)
-# 
-neural_gas.train(data,epochs=100)
+draw_point(data,1,2)
+neural_gas = algorithms.competitive.growing_neural_gas.GrowingNeuralGas(n_inputs=4,shuffle_data=True,verbose=True, max_edge_age=10, n_iter_before_neuron_added=50,max_nodes=300)
+# Entrainement
+neural_gas.train(data,epochs=300)
+# Matrice poids
 W=weight_mat(neural_gas.graph)
 D=mat_D(W)
 val,vect=repartition(D-W)
+# Etude des valeurs du vecteur propre ayant la deuxième plus petite valeure
 plot_vect(vect)
 # Grâce à l'affichage on considère que 0 est bon seuil
-vectA,indvectA,vectB,indvectB=bipartie(vect)
+
+vectA,indvectA,vectB,indvectB=bipartie(vect,T=0.2)
 b=calc_b(vectA,vectB)
 vect_rep=continue2discrete(vect,b,indvectA,indvectB)
 df=analyse_groupe(neural_gas.graph,indvectA,indvectB,t_max_pic_high)
+plot_repartition(neural_gas.graph,0.5,1,2,indvectA,indvectB,max_nodes,epochs)
 # draw_graph(neural_gas.graph)
 # plt.show()
 # 
